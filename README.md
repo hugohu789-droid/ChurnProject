@@ -1,2 +1,2 @@
 # churn
-To predict churn customer
+To predict churn customer.
