@@ -1,0 +1,14 @@
+fastapi==0.121.1
+imbalanced_learn==0.14.0
+joblib==1.5.2
+lightgbm==4.6.0
+matplotlib==3.10.7
+numpy==2.3.4
+optuna==4.5.0
+pandas==2.3.3
+pydantic==2.12.4
+scikit_learn==1.7.2
+seaborn==0.13.2
+SQLAlchemy==2.0.44
+uvicorn==0.38.0
+xgboost==3.1.1
