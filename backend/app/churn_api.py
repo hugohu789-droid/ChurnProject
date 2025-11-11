@@ -500,7 +500,7 @@ if __name__ == "__main__":
         print("pip install fastapi uvicorn sqlalchemy")
         exit(1)
     uvicorn.run(app="churn_api:app", 
-                host="127.0.0.1", 
+                host="0.0.0.0", 
                 port=8000, 
                 log_level="info",
                 reload=True)
