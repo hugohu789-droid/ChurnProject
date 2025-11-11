@@ -8,18 +8,11 @@ import ElementPlus from 'element-plus'
 import App from './App.vue'
 import router from './router'
 
-import 'element-plus/dist/index.css'
-
-// Start MSW in development to mock API endpoints
-if (import.meta.env.DEV) {
-  import('./mocks/browser').then(({ worker }) => {
-    worker.start()
-  })
-}
 
 const app = createApp(App)
 
 app.use(createPinia())
 app.use(router)
+app.use(ElementPlus)
 
 app.mount('#app')
