@@ -110,23 +110,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { mockTrainingRecords } from '../api/mockData'
+import { ref, onMounted } from 'vue'
+
 import UploadPredictData from '../components/UploadPredictData.vue'
 import type { Prediction } from '../api/models'
 import api from '../api/models'
 
 const predictions = ref<Prediction[]>([])
-const trainedModels = ref(mockTrainingRecords.filter((r) => r.status === 'trained'))
-const selectedModel = ref<string>('')
-const file = ref<File | null>(null)
-type UploadFileLike = { name: string; size: number; status?: string; raw?: File }
-const fileList = ref<UploadFileLike[]>([])
-const downloadUrl = ref<string>('')
+//const selectedModel = ref<string>('')
+//const file = ref<File | null>(null)
+//type UploadFileLike = { name: string; size: number; status?: string; raw?: File }
+//const fileList = ref<UploadFileLike[]>([])
+//const downloadUrl = ref<string>('')
 
-const canPredict = computed(() => file.value !== null)
-const isLoading = ref(false)
+//const isLoading = ref(false)
 
 const loading = ref(false)
 const currentPage = ref(1)
@@ -137,7 +134,7 @@ function onUploaded() {
   loadPredictions()
 }
 
-const getDownloadUrl = (filePath) => {
+const getDownloadUrl = (filePath: string) => {
   if (!filePath) return '#'
 
   const encodedPath = encodeURIComponent(filePath)
@@ -160,19 +157,19 @@ async function loadPredictions() {
   }
 }
 
-function beforeUpload(uploadFile: File) {
-  // store the file locally and prevent automatic upload
-  file.value = uploadFile
-  fileList.value = [
-    {
-      name: uploadFile.name,
-      size: uploadFile.size,
-      status: 'ready',
-      raw: uploadFile,
-    },
-  ]
-  return false
-}
+// function beforeUpload(uploadFile: File) {
+//   // store the file locally and prevent automatic upload
+//   file.value = uploadFile
+//   fileList.value = [
+//     {
+//       name: uploadFile.name,
+//       size: uploadFile.size,
+//       status: 'ready',
+//       raw: uploadFile,
+//     },
+//   ]
+//   return false
+// }
 
 function formatDate(d?: string | null) {
   if (!d) return '-'
@@ -183,53 +180,53 @@ function formatDate(d?: string | null) {
   }
 }
 
-function handleChange(hfile: File) {
-  // store the file locally and prevent automatic upload
-  file.value = hfile
-  fileList.value = [
-    {
-      name: hfile.name,
-      size: hfile.size,
-      status: 'ready',
-      raw: hfile,
-    },
-  ]
-  return false
-}
+// function handleChange(hfile: File) {
+//   // store the file locally and prevent automatic upload
+//   file.value = hfile
+//   fileList.value = [
+//     {
+//       name: hfile.name,
+//       size: hfile.size,
+//       status: 'ready',
+//       raw: hfile,
+//     },
+//   ]
+//   return false
+// }
 
-function handleRemove() {
-  file.value = null
-  fileList.value = []
-}
+// function handleRemove() {
+//   file.value = null
+//   fileList.value = []
+// }
 
-import { ElNotification } from 'element-plus'
-import type { File } from 'node:buffer'
+import { ElMessage } from 'element-plus'
+//import type { File } from 'node:buffer'
 
-async function handlePredict() {
-  if (!file.value || !selectedModel.value) return
-  // call mocked backend endpoint
-  const form = new FormData()
-  form.append('file', file.value)
-  form.append('modelId', selectedModel.value)
+// async function handlePredict() {
+//   if (!file.value || !selectedModel.value) return
+//   // call mocked backend endpoint
+//   const form = new FormData()
+//   form.append('file', file.value)
+//   form.append('modelId', selectedModel.value)
 
-  isLoading.value = true
-  try {
-    const res = await fetch('/api/predict', { method: 'POST', body: form })
-    if (!res.ok) throw new Error(`Server responded ${res.status}`)
-    const blob = await res.blob()
-    downloadUrl.value = URL.createObjectURL(blob)
-    ElNotification({
-      title: 'Success',
-      message: 'Prediction completed. Download is ready.',
-      type: 'success',
-    })
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    ElNotification({ title: 'Error', message: message || 'Prediction failed', type: 'error' })
-  } finally {
-    isLoading.value = false
-  }
-}
+//   isLoading.value = true
+//   try {
+//     const res = await fetch('/api/predict', { method: 'POST', body: form })
+//     if (!res.ok) throw new Error(`Server responded ${res.status}`)
+//     const blob = await res.blob()
+//     downloadUrl.value = URL.createObjectURL(blob)
+//     ElNotification({
+//       title: 'Success',
+//       message: 'Prediction completed. Download is ready.',
+//       type: 'success',
+//     })
+//   } catch (err) {
+//     const message = err instanceof Error ? err.message : String(err)
+//     ElNotification({ title: 'Error', message: message || 'Prediction failed', type: 'error' })
+//   } finally {
+//     isLoading.value = false
+//   }
+// }
 
 function onPageChange(page: number) {
   currentPage.value = page

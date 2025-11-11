@@ -5,10 +5,10 @@ import { ref } from 'vue'
 import { ElConfigProvider } from 'element-plus'
 
 // import element-plus English locale
-import en from 'element-plus/dist/locale/en.mjs'
+// mport en from 'element-plus/dist/locale/en.mjs'
 
 // Set language to english
-const locale = ref(en)
+// const locale = ref(en)
 </script>
 
 <template>

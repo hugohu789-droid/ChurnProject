@@ -45,23 +45,23 @@ export async function uploadPredictFile(fd: FormData) {
   return res.data
 }
 
-const mockModels: Model[] = Array.from({ length: 20 }).map((_, i) => ({
-  id: `model-${i + 1}`,
-  file_id: i + 1,
-  record_number: i + 1,
-  model_name: `ChurnModel_v${i + 1}`,
-  accuracy: 0.75 + Math.random() * 0.2,
-  recall_rate: 0.7 + Math.random() * 0.25,
-  train_date: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString(),
-  metadata: {
-    parameters: {
-      epochs: 100,
-      batchSize: 32,
-      learningRate: 0.001,
-    },
-    features: ['age', 'tenure', 'totalCharges', 'monthlyCharges'],
-  },
-}))
+// const mockModels: Model[] = Array.from({ length: 20 }).map((_, i) => ({
+//   id: `model-${i + 1}`,
+//   file_id: i + 1,
+//   record_number: i + 1,
+//   model_name: `ChurnModel_v${i + 1}`,
+//   accuracy: 0.75 + Math.random() * 0.2,
+//   recall_rate: 0.7 + Math.random() * 0.25,
+//   train_date: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString(),
+//   metadata: {
+//     parameters: {
+//       epochs: 100,
+//       batchSize: 32,
+//       learningRate: 0.001,
+//     },
+//     features: ['age', 'tenure', 'totalCharges', 'monthlyCharges'],
+//   },
+// }))
 
 export async function fetchModels(page = 1, pageSize = 10): Promise<FetchModelsResponse> {
   // Use mock data in development
