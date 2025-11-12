@@ -1,15 +1,13 @@
 #!/bin/bash
 # -------------------------------------------------------------
-# Uvicorn Deployment Script
-# Description: Stop any existing instance and start a new one
-# Author: Jenkins CI Automation
+# Uvicorn Deployment Script (file-based startup)
 # -------------------------------------------------------------
 
 APP_NAME="churn_api"
 APP_PATH="/usr/local/test/backend/app/churn_api.py"
 LOG_DIR="/usr/local/test/backend/app/logs"
 LOG_PATH="${LOG_DIR}/uvicorn.log"
-PYTHON_BIN="/usr/bin/python3"   # Change if using a virtual environment
+PYTHON_BIN="/usr/bin/python3"
 
 echo "[INFO] Starting deployment for ${APP_NAME}..."
 
@@ -32,10 +30,14 @@ else
   echo "[INFO] No existing Uvicorn process found."
 fi
 
-# 2️⃣ Start new process in background using the Python file
-echo "[INFO] Launching new Uvicorn process from file..."
+# 2️⃣ Start new process (run by file path)
+echo "[INFO] Launching new Uvicorn process..."
+APP_DIR=$(dirname "$APP_PATH")
+APP_FILE=$(basename "$APP_PATH" .py)
+
 nohup $PYTHON_BIN -m uvicorn \
-  "${APP_PATH%.*}:app" \
+  --app-dir "$APP_DIR" \
+  "${APP_FILE}:app" \
   --host 0.0.0.0 --port 8000 \
   --reload \
   > "$LOG_PATH" 2>&1 &
