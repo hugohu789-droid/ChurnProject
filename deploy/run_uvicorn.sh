@@ -7,10 +7,20 @@
 
 APP_NAME="churn_api"
 APP_PATH="/usr/local/test/backend/app/churn_api.py"
-LOG_PATH="/usr/local/test/backend/app/logs/uvicorn.log"
-PYTHON_BIN="/usr/bin/python3"  
+LOG_DIR="/usr/local/test/backend/app/logs"
+LOG_PATH="${LOG_DIR}/uvicorn.log"
+PYTHON_BIN="/usr/bin/python3"   # Change this if using a virtualenv
 
 echo "[INFO] Starting deployment for ${APP_NAME}..."
+
+# 0️⃣ Ensure the log directory exists
+if [ ! -d "$LOG_DIR" ]; then
+  echo "[INFO] Log directory not found. Creating: $LOG_DIR"
+  mkdir -p "$LOG_DIR"
+  chmod 755 "$LOG_DIR"
+else
+  echo "[INFO] Log directory exists: $LOG_DIR"
+fi
 
 # 1️⃣ Stop existing process
 echo "[INFO] Checking for existing Uvicorn process..."
@@ -24,8 +34,7 @@ fi
 
 # 2️⃣ Start new process in background
 echo "[INFO] Launching new Uvicorn process..."
-nohup $PYTHON_BIN -m uvicorn churn_api:app \
-  --host 0.0.0.0 --port 8000 \
+nohup $PYTHON_BIN -m uvicorn churn_api:app\
   --reload \
   > "$LOG_PATH" 2>&1 &
 
