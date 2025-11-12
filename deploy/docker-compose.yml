@@ -13,8 +13,6 @@ services:
         npm ci || npm install &&
         npm run build
       "
-    environment:
-      - NODE_ENV=production
   # ----------------- FRONTEND (NGINX) -----------------
   nginx:
     image: nginx:latest
