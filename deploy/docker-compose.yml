@@ -25,15 +25,21 @@ services:
     restart: always
     working_dir: /usr/src/app
     volumes:
-      # Mount backend code
-      - /usr/local/test/backend/app:/usr/src/app/app
-      # Mount requirements.txt for pip install
+      # Mount the entire backend/app folder directly as working_dir
+      - /usr/local/test/backend/app:/usr/src/app
       - /usr/local/test/backend/requirements.txt:/usr/src/app/requirements.txt
     command: >
       bash -c "pip install --no-cache-dir -r requirements.txt &&
-               python -m uvicorn app.churn_api:app --host 0.0.0.0 --port 8000"
-    extra_hosts:
-      - "hostserver:10.211.55.11"
+               python -m uvicorn churn_api:app --host 0.0.0.0 --port 8000"
     ports:
       - "8000:8000"
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    networks:
+      - backend_net
+
+networks:
+  backend_net:
+    driver: bridge
 
