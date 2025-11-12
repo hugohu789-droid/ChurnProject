@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  image: python:3.13.9
+  container_name: churn_api
+  restart: always
+  working_dir: /usr/src/app
+  volumes:
+    # Mount backend code
+    - /usr/local/test/backend/app:/usr/src/app/app
+    # Mount requirements.txt for pip install
+    - /usr/local/test/backend/requirements.txt:/usr/src/app/requirements.txt
+  extra_hosts:
+    - "hostserver:10.211.55.11"
+  ports:
+    - "8000:8000"
+
