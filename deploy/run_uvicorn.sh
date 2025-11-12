@@ -6,10 +6,10 @@
 # -------------------------------------------------------------
 
 APP_NAME="churn_api"
-APP_PATH="/usr/local/test/backend/app/churn_api.py"
+APP_PATH="/usr/local/test/backend/app/churn_api"
 LOG_DIR="/usr/local/test/backend/app/logs"
 LOG_PATH="${LOG_DIR}/uvicorn.log"
-PYTHON_BIN="/usr/bin/python3"   # Change this if using a virtualenv
+PYTHON_BIN="/usr/bin/python3"   # Change if using a virtual environment
 
 echo "[INFO] Starting deployment for ${APP_NAME}..."
 
@@ -32,9 +32,11 @@ else
   echo "[INFO] No existing Uvicorn process found."
 fi
 
-# 2️⃣ Start new process in background
-echo "[INFO] Launching new Uvicorn process..."
-nohup $PYTHON_BIN -m uvicorn churn_api:app\
+# 2️⃣ Start new process in background using the Python file
+echo "[INFO] Launching new Uvicorn process from file..."
+nohup $PYTHON_BIN -m uvicorn \
+  "${APP_PATH%.*}:app" \
+  --host 0.0.0.0 --port 8000 \
   --reload \
   > "$LOG_PATH" 2>&1 &
 
@@ -50,4 +52,3 @@ else
   echo "[ERROR] Failed to start ${APP_NAME}. Check logs for details."
   exit 1
 fi
-
