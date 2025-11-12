@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # ----------------- FRONTEND (NGINX) -----------------
   nginx:
     image: nginx:latest
     container_name: nginx
@@ -8,10 +9,29 @@ services:
     ports:
       - "8080:80"
     volumes:
-      # Frontend static files
+      # Mount built frontend (Vue dist)
       - /usr/local/test/frontend/dist:/usr/share/nginx/html:ro
-      # Custom nginx config
+      # Custom nginx configuration
       - /usr/local/test/deploy/nginx.conf:/etc/nginx/nginx.conf:ro
     extra_hosts:
       - "hostserver:10.211.55.11"
+    depends_on:
+      - backend
+
+  # ----------------- BACKEND (FASTAPI / UVICORN) -----------------
+  backend:
+    image: python:3.11
+    container_name: churn_api
+    restart: always
+    working_dir: /usr/src/app
+    volumes:
+      # Mount backend code
+      - /usr/local/test/backend/app:/usr/src/app/app
+      # Mount requirements.txt for pip install
+      - /usr/local/test/backend/requirements.txt:/usr/src/app/requirements.txt
+    command: >
+      bash -c "pip install --no-cache-dir -r requirements.txt &&
+               python -m uvicorn app.churn_api:app --host 0.0.0.0 --port 8000"
+    ports:
+      - "8000:8000"
 
