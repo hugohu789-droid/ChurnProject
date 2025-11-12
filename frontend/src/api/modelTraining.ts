@@ -1,5 +1,4 @@
 import { client } from './client'
-import { mockTrainingRecords } from './mockData'
 
 export type TrainingRecord = {
   id: number
