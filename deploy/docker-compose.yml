@@ -20,7 +20,7 @@ services:
 
   # ----------------- BACKEND (FASTAPI / UVICORN) -----------------
   backend:
-    image: python:3.11
+    image: python:3.13.9
     container_name: churn_api
     restart: always
     working_dir: /usr/src/app
