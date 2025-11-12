@@ -6,7 +6,7 @@
 # -------------------------------------------------------------
 
 APP_NAME="churn_api"
-APP_PATH="/usr/local/test/backend/app/churn_api"
+APP_PATH="/usr/local/test/backend/app/churn_api.py"
 LOG_DIR="/usr/local/test/backend/app/logs"
 LOG_PATH="${LOG_DIR}/uvicorn.log"
 PYTHON_BIN="/usr/bin/python3"   # Change if using a virtual environment
