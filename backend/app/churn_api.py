@@ -13,7 +13,7 @@ import modeltrain
 
 app = FastAPI()
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-SAFE_DOWNLOAD_DIR = Path('/Users/hugo/Dev/1.Python/py313').resolve()  # Define a safe directory for downloads
+SAFE_DOWNLOAD_DIR = Path(os.getcwd()).resolve()  # Define a safe directory for downloads
 
 @app.get("/")
 async def root():

@@ -70,7 +70,7 @@
           <template #default="{ row }">
             <a
               v-if="row.result1_path"
-              :href="getDownloadUrl(row.result_path)"
+              :href="getDownloadUrl(row.result1_path)"
               target="_blank"
               rel="noopener noreferrer"
               >Download File
