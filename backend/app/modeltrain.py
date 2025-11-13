@@ -1126,9 +1126,9 @@ def predict(file_path, model_path="lgbm_churn_model.joblib", model_path_optuna="
     X_new['Predicted_Churn'] = predictions1
     X_new['Churn_Probability'] = prediction_probabilities1
     print("predictions1 - 1:")
-    churning_customers1 = X_new[(X_new['Predicted_Churn'] == 1.0)]
+    # churning_customers1 = X_new[(X_new['Predicted_Churn'] == 1.0)]
     print("predictions1 - 2:")
-    churning_customers1 = churning_customers1[['CUSTOMER_NUMBER', 'Predicted_Churn', 'Churn_Probability']]
+    # churning_customers1 = churning_customers1[['CUSTOMER_NUMBER', 'Predicted_Churn', 'Churn_Probability']]
     print("predictions1 len:", len(churning_customers1))  
 
 
@@ -1144,12 +1144,14 @@ def predict(file_path, model_path="lgbm_churn_model.joblib", model_path_optuna="
     # results_df_model2 = X_new
     X_new['Predicted_Churn_Optuna'] = predictions2
     X_new['Churn_Probability_Optuna'] = prediction_probabilities2
-    churning_customers2 = X_new[X_new['Predicted_Churn_Optuna'] == 1.0]
-    churning_customers2 = churning_customers2[['CUSTOMER_NUMBER', 'Predicted_Churn_Optuna', 'Churn_Probability_Optuna']]
+    # churning_customers2 = X_new[X_new['Predicted_Churn_Optuna'] == 1.0]
+    # churning_customers2 = churning_customers2[['CUSTOMER_NUMBER', 'Predicted_Churn_Optuna', 'Churn_Probability_Optuna']]
     print("predictions2 len:", len(churning_customers2))
 
+    churning_customers = X_new[['CUSTOMER_NUMBER', 'Predicted_Churn', 'Churn_Probability', 'Predicted_Churn_Optuna', 'Churn_Probability_Optuna']]
+  
 
-    return churning_customers1, churning_customers2
+    return churning_customers
 
 if __name__ == "__main__":
     # 从命令行获取参数
@@ -1165,7 +1167,7 @@ if __name__ == "__main__":
 
     # final_model_training(X_train, y_train, X_test, y_test)
 
-    df1, df2 = predict("predict_customers.csv")
+    df1 = predict("predict_customers.csv")
 
 
 

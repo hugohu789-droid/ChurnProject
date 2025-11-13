@@ -252,7 +252,7 @@ def predict_model_background(predictId: int, file_path: str, model_id: str):
         predict_record = db.query(PredictionHistory).filter(PredictionHistory.id == predictId).first()
 
         model = db.query(TrainModel).filter(TrainModel.id == model_id).first()
-        df1, df2 = modeltrain.predict(file_path, model_path=model.model1_path, model_path_optuna=model.model2_path)
+        df1 = modeltrain.predict(file_path, model_path=model.model1_path, model_path_optuna=model.model2_path)
         
         today = datetime.now()
         date_dir = today.strftime("%Y%m%d")
@@ -260,7 +260,7 @@ def predict_model_background(predictId: int, file_path: str, model_id: str):
         os.makedirs(upload_dir, exist_ok=True)
 
         # Handle filename conflicts
-        base_name = 'lightgbm_predict_result_' + str(predictId)
+        base_name = 'predict_result_' + str(predictId)
         extension = '.csv'
         counter = 1
         new_filename = base_name + extension
@@ -270,15 +270,15 @@ def predict_model_background(predictId: int, file_path: str, model_id: str):
         predict_record.result1_path = os.path.join(upload_dir, new_filename)
         df1.to_csv(predict_record.result1_path, index=False)
 
-        base_name = 'lightgbm_optuna_predict_result_' + str(predictId)
-        extension = '.csv'
-        counter = 1
-        new_filename = base_name + extension
-        while os.path.exists(os.path.join(upload_dir, new_filename)):
-            new_filename = f"{base_name}_{counter}{extension}"
-            counter += 1
-        predict_record.result2_path = os.path.join(upload_dir, new_filename)
-        df2.to_csv(predict_record.result2_path, index=False)
+        # base_name = 'lightgbm_optuna_predict_result_' + str(predictId)
+        # extension = '.csv'
+        # counter = 1
+        # new_filename = base_name + extension
+        # while os.path.exists(os.path.join(upload_dir, new_filename)):
+        #     new_filename = f"{base_name}_{counter}{extension}"
+        #     counter += 1
+        # predict_record.result2_path = os.path.join(upload_dir, new_filename)
+        # df2.to_csv(predict_record.result2_path, index=False)
 
         predict_record.status = "completed"
         db.add(predict_record)
