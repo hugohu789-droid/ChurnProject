@@ -310,9 +310,10 @@ def cleanData(df, is_prediction=False, cols_to_drop = None):
             month_label_3 = unique_month_labels[2] if len(unique_month_labels) > 2 else None
 
             # Directly filter the data based on the string labels to create train and test sets
-            train_df = df_customer_level[((df_customer_level['SNAPSHOT_DATE'] == month_label_1)
-                                            | (df_customer_level['SNAPSHOT_DATE'] == month_label_2))].copy()
+            # train_df = df_customer_level[((df_customer_level['SNAPSHOT_DATE'] == month_label_1)
+            #                                 | (df_customer_level['SNAPSHOT_DATE'] == month_label_2))].copy()
 
+            train_df = df_customer_level[((df_customer_level['SNAPSHOT_DATE'] == month_label_1))].copy()
 
             test_df = df_customer_level[df_customer_level['SNAPSHOT_DATE'] == month_label_2].copy()
 
