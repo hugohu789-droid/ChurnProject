@@ -1,0 +1,88 @@
+# =================================================================
+# 1. System Level Files (Windows and macOS)
+# =================================================================
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+desktop.ini
+
+# =================================================================
+# 2. Frontend Rules (Vue/Frontend)
+# =================================================================
+# Dependency directories
+frontend/node_modules/
+frontend/jspm_packages/
+
+# Build output directories
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
+
+# Logs and Caches
+frontend/.eslintcache
+frontend/.stylelintcache
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+
+# Editor/IDE configurations
+frontend/.vscode/
+frontend/.idea/
+
+# =================================================================
+# 3. Backend Rules (FastAPI/Python)
+# =================================================================
+# Byte-compiled / optimized / DLL files
+backend/**/__pycache__/
+backend/**/*.py[cod]
+backend/*$py.class
+
+# Virtual environments
+backend/.venv/
+backend/venv/
+backend/env/
+backend/ENV/
+
+# Distribution / packaging
+backend/build/
+backend/develop-eggs/
+backend/dist/
+backend/downloads/
+backend/eggs/
+backend/.eggs/
+backend/lib/
+backend/lib64/
+backend/parts/
+backend/sdist/
+backend/var/
+backend/wheels/
+backend/pip-wheel-metadata/
+backend/share/python-wheels/
+backend/*.egg-info/
+backend/.installed.cfg
+backend/*.egg
+
+# Unit test / coverage reports
+backend/htmlcov/
+backend/.tox/
+backend/.nox/
+backend/.coverage
+backend/.coverage.*
+backend/.cache
+backend/nosetests.xml
+backend/coverage.xml
+backend/*.cover
+backend/.hypothesis/
+backend/.pytest_cache/
+
+# =================================================================
+# 4. Environment Variables and Secrets (Security)
+# =================================================================
+.env
+.env.local
+.env.*.local
+*.swp
+*.bak
+*.tmp
