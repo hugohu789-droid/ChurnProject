@@ -42,7 +42,7 @@ class TrainModel(Base):
 #     results_path = Column(String)
 
 class PredictionHistory(Base):
-    __tablename__ = "prdiction_histories"
+    __tablename__ = "prediction_histories"
     
     id = Column(Integer, primary_key=True, index=True)
     original_filename = Column(String)

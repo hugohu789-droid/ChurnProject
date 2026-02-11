@@ -64,6 +64,12 @@ backend/*.egg-info/
 backend/.installed.cfg
 backend/*.egg
 
+backend/predictfiles
+backend/predictresults
+backend/trained_models
+backend/uploadfiles
+backend/fileupload.db
+
 # Unit test / coverage reports
 backend/htmlcov/
 backend/.tox/
@@ -76,6 +82,8 @@ backend/coverage.xml
 backend/*.cover
 backend/.hypothesis/
 backend/.pytest_cache/
+backend/*.joblib
+backend/*_results.csv
 
 # =================================================================
 # 4. Environment Variables and Secrets (Security)

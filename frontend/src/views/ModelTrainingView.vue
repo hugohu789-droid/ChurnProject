@@ -1,8 +1,8 @@
 <template>
   <div class="page">
     <h1>Model Training</h1>
-    <el-row :gutter="16" style="margin-bottom: 16px">
-      <el-col :span="16">
+    <el-row :gutter="24" style="margin-bottom: 16px">
+      <el-col :span="24">
         <UploadTrainingData @uploaded="onUploaded" />
       </el-col>
     </el-row>

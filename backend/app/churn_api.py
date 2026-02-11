@@ -1,10 +1,10 @@
-from fastapi import FastAPI, Query, UploadFile, HTTPException, File, Form, BackgroundTasks
+from fastapi import FastAPI, Query, UploadFile, HTTPException, File, Form, BackgroundTasks, Depends
 from fastapi.responses import FileResponse
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy import func
 from datetime import datetime
 import os
 from pydantic import BaseModel
-from typing import List
 from pathlib import Path
 
 from models import PredictionHistory, TrainModel, engine, FileUpload
@@ -19,28 +19,64 @@ SAFE_DOWNLOAD_DIR = Path(os.getcwd()).resolve()  # Define a safe directory for d
 async def root():
     return {"message": "File Upload API is running"}
 
+# Dependency to get DB session
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 class TrainRequest(BaseModel):
     id: int
-    modelName: str
+    model_name: str
 
 # 新增：分页请求模型
 class PageRequest(BaseModel):
     page: int = 1
     page_size: int = 10
 
-class PredictForm(BaseModel):
-    file: UploadFile
-    modelId: str
+@app.get("/api/dashboard/stats")
+def dashboard_stats(db: Session = Depends(get_db)):
+    # Basic Statistics
+    total_files = db.query(FileUpload).count()
+    total_models = db.query(TrainModel).count()
+    total_predictions = db.query(PredictionHistory).count()
+    
+    # Calculate the average accuracy
+    avg_accuracy = db.query(func.avg(TrainModel.accuracy)).scalar()
+    avg_accuracy = avg_accuracy if avg_accuracy is not None else 0.0
+    
+    # Get the 5 most recently trained models
+    recent_models = db.query(TrainModel).order_by(TrainModel.train_date.desc()).limit(5).all()
+    
+    recent_models_list = []
+    for m in recent_models:
+        recent_models_list.append({
+            "id": m.id,
+            "model_name": m.model_name,
+            "accuracy": m.accuracy,
+            "precision": m.precision,
+            "train_date": m.train_date
+        })
+
+    return {
+        "total_files": total_files,
+        "total_models": total_models,
+        "total_predictions": total_predictions,
+        "average_accuracy": avg_accuracy,
+        "recent_models": recent_models_list
+    }
 
 def train_model_background(id_value: int, model_name: str):
+    # Background tasks create their own session
     db = SessionLocal()
     try:
-        fileRecord = db.query(FileUpload).filter(FileUpload.id == id_value).first()
-        if not fileRecord:
-            raise HTTPException(status_code=404, detail=f"File record with id {id} not found")
-        file_path = fileRecord.file_path
-        # Load the dataset
-        df = modeltrain.loadData(file_path)
+        file_record = db.query(FileUpload).filter(FileUpload.id == id_value).first()
+        if not file_record:
+            print(f"Error: File record with id {id_value} not found")
+            return
+        file_path = file_record.file_path
 
         # Create date-based directory
         today = datetime.now()
@@ -49,153 +85,124 @@ def train_model_background(id_value: int, model_name: str):
         os.makedirs(models_dir, exist_ok=True)
 
         # Handle filename conflicts
-        base_name = os.path.splitext(fileRecord.saved_filename)[0]
-        model1_name = base_name + '_' + 'lgbm_churn_model.joblib'
-        model2_name = base_name + '_' + 'lgbm_churn_model_optuna-tuned.joblib'
+        base_name = os.path.splitext(file_record.saved_filename)[0]
+        final_model_name = base_name + '_' + 'churn_model.joblib'
+        model_path = os.path.join(models_dir, final_model_name)
 
-        cols_to_drop = ['SNAPSHOT_DATE', 'CUSTOMER_NUMBER', 'PRODUCT_TYPE']
-        (train_df, test_df, X_train, y_train, X_test, y_test) = modeltrain.cleanData(df, cols_to_drop = cols_to_drop)
 
-        (precision, recall, auc) = modeltrain.final_model_training(X_train, y_train, X_test, y_test,
-                                         dir = models_dir + '/', 
-                                         model1_name = model1_name, 
-                                         model2_name = model2_name)
+        # Train
+        metrics = modeltrain.train_model(file_path, model_save_path = model_path)
 
         train_model = TrainModel(
             file_id = id_value,
-            record_number= len(df),
-            accuracy= auc,
-            recall_rate= recall,
-            precision= precision,
-            model1_path= os.path.join(models_dir, model1_name),
-            model2_path= os.path.join(models_dir, model2_name),
-            model_name = model_name
+            record_number= 0,
+            accuracy= metrics['accuracy'],
+            recall_rate= metrics['recall'],
+            precision= metrics['precision'],
+            model1_path= model_path,
+            model_name = model_name # Use the user provided name or generated one
         )
 
         db.add(train_model)
+        
+        # Update status
+        file_record.status = "trained"
+        db.add(file_record)
+        
         db.commit()
-    finally:
-        db.close()
-
-    db = SessionLocal()
-    try:
-        # db.add(train_model)
-
-        # update upload_files id equal id_value records, update status to "trained"
-        file_record = db.query(FileUpload).filter(FileUpload.id == id_value).first()
-        if file_record:
-            file_record.status = "trained"
-            db.add(file_record)
-
-        db.commit()
+    except Exception as e:
+        print(f"Error during background training: {e}")
+        db.rollback()
     finally:
         db.close()
 
 @app.post("/api/modeltraining/train")
-async def train(background_tasks: BackgroundTasks,
-                body: TrainRequest):
-    # get two parameters from body
+def train(
+    background_tasks: BackgroundTasks,
+    body: TrainRequest,
+    db: Session = Depends(get_db)
+):
     id_value = body.id
-    model_name = body.modelName
+    model_name = body.model_name
 
     background_tasks.add_task(train_model_background, id_value, model_name)
     
-    db = SessionLocal()
-    try:
-        # db.add(train_model)
+    file_record = db.query(FileUpload).filter(FileUpload.id == id_value).first()
+    if not file_record:
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    file_record.status = "training"
+    db.commit()
 
-        # update upload_files id equal id_value records, update status to "trained"
-        file_record = db.query(FileUpload).filter(FileUpload.id == id_value).first()
-        if file_record:
-            file_record.status = "training"
-            db.add(file_record)
-
-        db.commit()
-    finally:
-        db.close()
-
-    return {"id": id_value, "modelName": model_name}
+    return {"id": id_value, "model_name": model_name}
 
 @app.post("/api/modeltraining/list")
-async def list_upload_files(body: PageRequest):
+def list_upload_files(body: PageRequest, db: Session = Depends(get_db)):
     page = max(1, body.page)
     page_size = max(1, body.page_size)
 
-    db = SessionLocal()
-    try:
-        total = db.query(FileUpload).count()
-        offset = (page - 1) * page_size
-        records = db.query(FileUpload).order_by(FileUpload.upload_time.desc()).offset(offset).limit(page_size).all()
+    total = db.query(FileUpload).count()
+    offset = (page - 1) * page_size
+    records = db.query(FileUpload).order_by(FileUpload.upload_time.desc()).offset(offset).limit(page_size).all()
 
-        items = []
-        for r in records:
-            items.append({
-                "id": r.id,
-                "original_filename": getattr(r, "original_filename", None),
-                "saved_filename": getattr(r, "saved_filename", None),
-                "file_path": getattr(r, "file_path", None),
-                "file_size": getattr(r, "file_size", None),
-                "status": getattr(r, "status", None),
-                "upload_time": getattr(r, "upload_time", None)
-            })
+    items = []
+    for r in records:
+        items.append({
+            "id": r.id,
+            "original_filename": r.original_filename,
+            "saved_filename": r.saved_filename,
+            "file_path": r.file_path,
+            "file_size": r.file_size,
+            "status": r.status,
+            "upload_time": r.upload_time
+        })
 
-        return {
-            "page": page,
-            "page_size": page_size,
-            "total": total,
-            "records": items
-        }
-    finally:
-        db.close()
+    return {
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "records": items
+    }
 
 @app.get("/api/models/{id}")
-async def model_detail(id: int):
-    db = SessionLocal()
-    try:
-        model = db.query(TrainModel).filter(TrainModel.id == id).first()
-        if not model:
-            raise HTTPException(status_code=404, detail=f"Model with id {id} not found")
-        
-        return {
-            "id": model.id,
-            "file_id": model.file_id,
-            "record_number": model.record_number,
-            "accuracy": getattr(model, "accuracy", None),
-            "recall_rate": getattr(model, "recall_rate", None),
-            "precision": getattr(model, "precision", None),
-            "model_name": getattr(model, "model_name", None),
-            "train_date": getattr(model, "train_date", None)
-        }
-    finally:
-        db.close()
+def model_detail(id: int, db: Session = Depends(get_db)):
+    model = db.query(TrainModel).filter(TrainModel.id == id).first()
+    if not model:
+        raise HTTPException(status_code=404, detail=f"Model with id {id} not found")
+    
+    return {
+        "id": model.id,
+        "file_id": model.file_id,
+        "record_number": model.record_number,
+        "accuracy": model.accuracy,
+        "recall_rate": model.recall_rate,
+        "precision": model.precision,
+        "model_name": model.model_name,
+        "train_date": model.train_date
+    }
 
 @app.post("/api/trained/models")
-async def list_trained_models():
+def list_trained_models(db: Session = Depends(get_db)):
+    records = db.query(TrainModel).order_by(TrainModel.train_date.desc()).all()
 
-    db = SessionLocal()
-    try:
-        records = db.query(TrainModel).order_by(TrainModel.train_date.desc()).all()
+    items = []
+    for r in records:
+        items.append({
+            "id": r.id,
+            "file_id": r.file_id,
+            "record_number": r.record_number,
+            "accuracy": r.accuracy,   
+            "recall_rate": r.recall_rate,
+            "model_name": r.model_name,
+            "train_date": r.train_date
+        })
 
-        items = []
-        for r in records:
-            items.append({
-                "id": r.id,
-                "file_id": r.file_id,
-                "record_number": r.record_number,
-                "accuracy": getattr(r, "accuracy", None),   
-                "recall_rate": getattr(r, "recall_rate", None),
-                "model_name": getattr(r, "model_name", None),
-                "train_date": getattr(r, "train_date", None)
-            })
-
-        return {
-            "records": items
-        }
-    finally:
-        db.close()
+    return {
+        "records": items
+    }
 
 @app.post("/api/upload")
-async def upload_file(file: UploadFile = File(...)):  # 明确指定为 File 类型
+def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db)):
     if not file.filename.endswith('.csv'):
         raise HTTPException(status_code=400, detail="Only CSV files are allowed")
     
@@ -232,7 +239,6 @@ async def upload_file(file: UploadFile = File(...)):  # 明确指定为 File 类
         )
         db.add(db_file)
         db.commit()
-        db.close()
 
         return {
             "original_filename": file.filename,
@@ -243,24 +249,21 @@ async def upload_file(file: UploadFile = File(...)):  # 明确指定为 File 类
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-def predict_model_background(predictId: int, file_path: str, model_id: str):
+def predict_model_background(predict_id: int, file_path: str, model_id: str):
     # predict model name from TrainModel table
-    
+    db = SessionLocal()
     try:
-        db = SessionLocal()
+        predict_record = db.query(PredictionHistory).filter(PredictionHistory.id == predict_id).first()
+        if not predict_record:
+            return
 
-        predict_record = db.query(PredictionHistory).filter(PredictionHistory.id == predictId).first()
-
-        model = db.query(TrainModel).filter(TrainModel.id == model_id).first()
-        df1 = modeltrain.predict(file_path, model_path=model.model1_path, model_path_optuna=model.model2_path)
-        
         today = datetime.now()
         date_dir = today.strftime("%Y%m%d")
         upload_dir = os.path.join("predictresults", date_dir)
         os.makedirs(upload_dir, exist_ok=True)
 
         # Handle filename conflicts
-        base_name = 'predict_result_' + str(predictId)
+        base_name = 'predict_result_' + str(predict_id)
         extension = '.csv'
         counter = 1
         new_filename = base_name + extension
@@ -268,32 +271,28 @@ def predict_model_background(predictId: int, file_path: str, model_id: str):
             new_filename = f"{base_name}_{counter}{extension}"
             counter += 1
         predict_record.result1_path = os.path.join(upload_dir, new_filename)
-        df1.to_csv(predict_record.result1_path, index=False)
 
-        # base_name = 'lightgbm_optuna_predict_result_' + str(predictId)
-        # extension = '.csv'
-        # counter = 1
-        # new_filename = base_name + extension
-        # while os.path.exists(os.path.join(upload_dir, new_filename)):
-        #     new_filename = f"{base_name}_{counter}{extension}"
-        #     counter += 1
-        # predict_record.result2_path = os.path.join(upload_dir, new_filename)
-        # df2.to_csv(predict_record.result2_path, index=False)
+        model = db.query(TrainModel).filter(TrainModel.id == model_id).first()
+        if model:
+            modeltrain.predict(data_path = file_path, model_path = model.model1_path, output_path = predict_record.result1_path)
 
         predict_record.status = "completed"
         db.add(predict_record)
         db.commit()
-        db.close()
     except Exception as e:
-        return str(e)
+        print(f"Prediction error: {e}")
+    finally:
+        db.close()
 
 @app.post("/api/predict")
-async def upload_predict_file(background_tasks: BackgroundTasks, file: UploadFile = File(...), modelId: str = Form(...)):
+def predict(
+    background_tasks: BackgroundTasks, 
+    file: UploadFile = File(...), 
+    model_id: str = Form(..., alias="modelId"), # Alias allows frontend to send modelId
+    db: Session = Depends(get_db)
+):
     if not file.filename.endswith('.csv'):
         raise HTTPException(status_code=400, detail="Only CSV files are allowed")
-    
-    file = file
-    model_id = modelId
 
     ret = {}
 
@@ -343,9 +342,6 @@ async def upload_predict_file(background_tasks: BackgroundTasks, file: UploadFil
         db.commit()
 
         db_file_id = db_file.id
-
-        db.close()
-
         
         ret = {
             "original_filename": file.filename,
@@ -355,76 +351,66 @@ async def upload_predict_file(background_tasks: BackgroundTasks, file: UploadFil
         } 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        db.close()
     
     background_tasks.add_task(predict_model_background, db_file_id, file_path, model_id)
     return ret
     
 @app.post("/api/predictions")
-async def list_predictions(body: PageRequest): 
+def list_predictions(body: PageRequest, db: Session = Depends(get_db)): 
     page = max(1, body.page)
     page_size = max(1, body.page_size)
 
-    db = SessionLocal()
-    try:
-        total = db.query(PredictionHistory).count()
-        offset = (page - 1) * page_size
-        records = db.query(PredictionHistory).order_by(PredictionHistory.predict_date.desc()).offset(offset).limit(page_size).all()
+    total = db.query(PredictionHistory).count()
+    offset = (page - 1) * page_size
+    records = db.query(PredictionHistory).order_by(PredictionHistory.predict_date.desc()).offset(offset).limit(page_size).all()
 
-        items = []
-        for r in records:
-            items.append({
-                "id": r.id,
-                "train_model_id": r.train_model_id,
-                "train_model_name": getattr(r, "train_model_name", None),
-                "result1_path": getattr(r, "result1_path", None),   
-                "result2_path": getattr(r, "result2_path", None),
-                "predict_date": getattr(r, "predict_date", None),
-                "status": getattr(r, "status", None)
-            }) 
+    items = []
+    for r in records:
+        items.append({
+            "id": r.id,
+            "train_model_id": r.train_model_id,
+            "train_model_name": r.train_model_name,
+            "result1_path": r.result1_path,   
+            "result2_path": r.result2_path,
+            "predict_date": r.predict_date,
+            "status": r.status
+        }) 
 
-        return {
-            "page": page,
-            "page_size": page_size,
-            "total": total,
-            "records": items
-        }
-    finally:
-        db.close()
+    return {
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "records": items
+    }
 
 @app.post("/api/models/list")
-async def list_models(body: PageRequest):
+def list_models(body: PageRequest, db: Session = Depends(get_db)):
     page = max(1, body.page)
     page_size = max(1, body.page_size)
 
-    db = SessionLocal()
-    try:
-        total = db.query(TrainModel).count()
-        offset = (page - 1) * page_size
-        records = db.query(TrainModel).order_by(TrainModel.train_date.desc()).offset(offset).limit(page_size).all()
+    total = db.query(TrainModel).count()
+    offset = (page - 1) * page_size
+    records = db.query(TrainModel).order_by(TrainModel.train_date.desc()).offset(offset).limit(page_size).all()
 
-        items = []
-        for r in records:
-            items.append({
-                "id": r.id,
-                "file_id": r.file_id,
-                "record_number": r.record_number,
-                "accuracy": getattr(r, "accuracy", None),   
-                "recall_rate": getattr(r, "recall_rate", None),
-                "precision": getattr(r, "precision", None),
-                "model_name": getattr(r, "model_name", None),
-                "train_date": getattr(r, "train_date", None)
-            })
+    items = []
+    for r in records:
+        items.append({
+            "id": r.id,
+            "file_id": r.file_id,
+            "record_number": r.record_number,
+            "accuracy": r.accuracy,   
+            "recall_rate": r.recall_rate,
+            "precision": r.precision,
+            "model_name": r.model_name,
+            "train_date": r.train_date
+        })
 
-        return {
-            "page": page,
-            "page_size": page_size,
-            "total": total,
-            "records": items
-        }
-    finally:
-        db.close()
+    return {
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "records": items
+    }
 
 
 
@@ -470,25 +456,21 @@ async def download_file(
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 @app.delete("/api/modeltraining/{file_id}")
-async def delete_file(file_id: int):
-    db = SessionLocal()
-    try:
-        # 查找记录
-        file_record = db.query(FileUpload).filter(FileUpload.id == file_id).first()
-        if not file_record:
-            raise HTTPException(status_code=404, detail=f"File with id {file_id} not found")
-        
-        # 如果文件存在，删除物理文件
-        if os.path.exists(file_record.file_path):
-            os.remove(file_record.file_path)
-        
-        # 删除数据库记录
-        db.delete(file_record)
-        db.commit()
-        
-        return {"message": f"File with id {file_id} has been deleted"}
-    finally:
-        db.close()
+def delete_file(file_id: int, db: Session = Depends(get_db)):
+    # search records
+    file_record = db.query(FileUpload).filter(FileUpload.id == file_id).first()
+    if not file_record:
+        raise HTTPException(status_code=404, detail=f"File with id {file_id} not found")
+    
+    # If the file exists, delete the physical file.
+    if os.path.exists(file_record.file_path):
+        os.remove(file_record.file_path)
+    
+    # Delete database record
+    db.delete(file_record)
+    db.commit()
+    
+    return {"message": f"File with id {file_id} has been deleted"}
 
 if __name__ == "__main__":
     from pydantic import BaseModel
