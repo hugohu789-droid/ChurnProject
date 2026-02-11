@@ -1,111 +1,70 @@
 <template>
   <div class="page">
     <h1>Predict</h1>
-    <el-card class="predict-view">
-      <h2>Model Prediction</h2>
-      <el-row :gutter="16" style="margin-bottom: 16px">
-        <el-col :span="16">
+    <el-row :gutter="24" style="margin-bottom: 16px">
+      <el-col :span="24">
+        <el-card class="predict-view">
+          <h2>Model Prediction</h2>
           <UploadPredictData @uploaded="onUploaded" />
-        </el-col>
-      </el-row>
-      <!-- <div class="upload-section">
-        <label class="label">Test data file</label>
-        <el-upload
-          class="upload"
-          :before-upload="beforeUpload"
-          :on-remove="handleRemove"
-          :file-list="fileList"
-          :auto-upload="false"
-          :on-change="handleChange"
-          :limit="1"
-          drag
-        >
-          <i class="el-icon-upload"></i>
-          <div class="el-upload__text">Drop file here or <em>click to upload</em></div>
-          <div class="el-upload__tip">Only CSV files are supported</div>
-        </el-upload>
-      </div> -->
+        </el-card>
+      </el-col>
+    </el-row>
+    
+    <el-row :gutter="24" style="margin-bottom: 16px">
+      <el-col :span="24">
+        <el-card class="prediction-list">
+          <h2>Prediction History</h2>
+          <el-table :data="predictions" style="width: 100%">
+            <el-table-column prop="train_model_name" label="Model Name" />
+            <el-table-column prop="predict_date" label="Training Time" width="180">
+              <template #default="{ row }">
+                {{ formatDate(row.predict_date) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="result1_path" label="LightGBM Model Result" width="180">
+              <template #default="{ row }">
+                <a
+                  v-if="row.result1_path"
+                  :href="getDownloadUrl(row.result1_path)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Download File
+                </a>
+              </template>
+            </el-table-column>
+            <el-table-column prop="result2_path" label="Optuna Model Result" width="180">
+              <template #default="{ row }">
+                <a
+                  v-if="row.result2_path"
+                  :href="getDownloadUrl(row.result2_path)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Download File
+                </a>
+              </template>
+            </el-table-column>
+            <el-table-column prop="status" label="Status" width="100">
+              <template #default="{ row }">{{ row.status }}</template>
+            </el-table-column>
+          </el-table>
 
-      <!-- <div class="model-select-section">
-        <label class="label">Select model</label>
-        <el-select
-          v-model="selectedModel"
-          placeholder="Choose a trained model"
-          clearable
-          style="width: 100%"
-        >
-          <el-option
-            v-for="model in trainedModels"
-            :key="model.id"
-            :label="model.modelName"
-            :value="model.id"
-          />
-        </el-select>
-      </div>
+          <div style="margin-top: 12px; text-align: right">
+            <el-pagination
+              background
+              layout="total, sizes, prev, pager, next, jumper"
+              :total="total"
+              :page-size="pageSize"
+              :current-page="currentPage"
+              :page-sizes="[5, 10, 20, 50]"
+              @current-change="onPageChange"
+              @size-change="onPageSizeChange"
+            />
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
 
-      <el-button
-        type="primary"
-        :disabled="!canPredict || isLoading"
-        :loading="isLoading"
-        @click="handlePredict"
-        >Predict</el-button
-      > -->
-
-      <!-- <div v-if="downloadUrl" class="result-section">
-        <p>Prediction result is ready:</p>
-        <a :href="downloadUrl" download>Download prediction results</a>
-      </div> -->
-    </el-card>
-
-    <el-card class="prediction-list">
-      <h2>Prediction History</h2>
-      <el-table :data="predictions" style="width: 100%">
-        <el-table-column prop="train_model_name" label="Model Name" />
-        <el-table-column prop="predict_date" label="Training Time" width="180">
-          <template #default="{ row }">
-            {{ formatDate(row.predict_date) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="result1_path" label="LightGBM Model Result" width="180">
-          <template #default="{ row }">
-            <a
-              v-if="row.result1_path"
-              :href="getDownloadUrl(row.result1_path)"
-              target="_blank"
-              rel="noopener noreferrer"
-              >Download File
-            </a>
-          </template>
-        </el-table-column>
-        <el-table-column prop="result2_path" label="Optuna Model Result" width="180">
-          <template #default="{ row }">
-            <a
-              v-if="row.result2_path"
-              :href="getDownloadUrl(row.result2_path)"
-              target="_blank"
-              rel="noopener noreferrer"
-              >Download File
-            </a>
-          </template>
-        </el-table-column>
-        <el-table-column prop="status" label="Status" width="100">
-          <template #default="{ row }">{{ row.status }}</template>
-        </el-table-column>
-      </el-table>
-
-      <div style="margin-top: 12px; text-align: right">
-        <el-pagination
-          background
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="total"
-          :page-size="pageSize"
-          :current-page="currentPage"
-          :page-sizes="[5, 10, 20, 50]"
-          @current-change="onPageChange"
-          @size-change="onPageSizeChange"
-        />
-      </div>
-    </el-card>
+    
   </div>
 </template>
 

@@ -1,165 +1,208 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useRoute, RouterView } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { getDashboardStats } from '../api/dashboard'
+import { ElMessage } from 'element-plus'
 
-const route = useRoute()
-
-const menuItems = [
-  {
-    index: 'model-training',
-    label: 'Model Training',
-    path: '/model-training',
-    icon: 'el-icon-s-data',
-  },
-  {
-    index: 'models',
-    label: 'Models',
-    path: '/models',
-    icon: 'el-icon-s-grid',
-  },
-  { index: 'predict', label: 'Prediction', path: '/predict', icon: 'el-icon-s-operation' },
-]
-
-const isCollapsed = ref(false)
-
-function updateCollapse() {
-  isCollapsed.value = window.innerWidth < 880
+// define data structure for dashboard stats
+interface DashboardStats {
+  total_files: number
+  total_models: number
+  total_predictions: number
+  average_accuracy: number
+  recent_models: Array<{
+    id: number
+    model_name: number
+    accuracy: number
+    precision: number
+    train_date: string
+  }>
 }
 
-function toggleCollapse() {
-  isCollapsed.value = !isCollapsed.value
+const stats = ref<DashboardStats>({
+  total_files: 0,
+  total_models: 0,
+  total_predictions: 0,
+  average_accuracy: 0,
+  recent_models: []
+})
+
+const loading = ref(false)
+
+const fetchStats = async () => {
+  loading.value = true
+  try {
+    const res = await getDashboardStats()
+    stats.value = res.data
+  } catch (error) {
+    console.error(error)
+    ElMessage.error('Failed to load dashboard data')
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(() => {
-  updateCollapse()
-  window.addEventListener('resize', updateCollapse)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', updateCollapse)
+  fetchStats()
 })
 </script>
 
 <template>
-  <el-container class="home-layout">
-    <el-aside :width="isCollapsed ? '64px' : '220px'" class="sidebar">
-      <div class="brand" :class="{ collapsed: isCollapsed }">
-        <div class="logo">Telco AI</div>
-        <div class="subtitle">Churn Prediction Dashboard</div>
-      </div>
+  <div class="dashboard-container">
+    <div class="header">
+      <h2 class="title">Dashboard Overview</h2>
+      <p class="subtitle">Welcome back! Here is the latest update on your churn prediction models.</p>
+    </div>
 
-      <el-menu
-        :default-active="route.name as string"
-        :collapse="isCollapsed"
-        class="menu"
-        router
-        background-color="transparent"
-        text-color="#9fb8ff"
-        active-text-color="#fff"
-      >
-        <el-menu-item
-          v-for="item in menuItems"
-          :key="item.index"
-          :index="item.path"
-          :route="item.path"
-        >
-          <i :class="item.icon" style="margin-right: 8px"></i>
-          <span>{{ item.label }}</span>
-        </el-menu-item>
-      </el-menu>
+    <!-- statistics cards -->
+    <el-row :gutter="24">
+      <el-col :span="6">
+        <el-card shadow="hover" class="stat-card">
+          <template #header>
+            <div class="card-header">
+              <span>Total Files</span>
+            </div>
+          </template>
+          <div class="stat-value">{{ stats.total_files }}</div>
+        </el-card>
+      </el-col>
+      
+      <el-col :span="6">
+        <el-card shadow="hover" class="stat-card">
+          <template #header>
+            <div class="card-header">
+              <span>Trained Models</span>
+            </div>
+          </template>
+          <div class="stat-value">{{ stats.total_models }}</div>
+        </el-card>
+      </el-col>
+      
+      <el-col :span="6">
+        <el-card shadow="hover" class="stat-card">
+          <template #header>
+            <div class="card-header">
+              <span>Predictions</span>
+            </div>
+          </template>
+          <div class="stat-value">{{ stats.total_predictions }}</div>
+        </el-card>
+      </el-col>
+      
+      <el-col :span="6">
+        <el-card shadow="hover" class="stat-card highlight-card">
+          <template #header>
+            <div class="card-header">
+              <span>Avg Accuracy</span>
+            </div>
+          </template>
+          <div class="stat-value">
+            {{ (stats.average_accuracy * 100).toFixed(1) }}<span class="unit">%</span>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
 
-      <div class="sidebar-footer">Powered by Element Plus</div>
-    </el-aside>
-
-    <el-container class="main-container" width="100%">
-      <el-header class="header">
-        <div class="header-left">
-          <el-button type="text" @click="toggleCollapse" class="collapse-btn">
-            <i class="el-icon-s-fold"></i>
-          </el-button>
-          <div class="header-title">Telecommunications · Predictive Modeling</div>
-        </div>
-      </el-header>
-
-      <el-main class="main-content">
-        <RouterView />
-      </el-main>
-    </el-container>
-  </el-container>
+    <!-- latest trained models-->
+    <div class="recent-section">
+      <h3 class="section-title">Recent Trained Models</h3>
+      <el-card shadow="never" class="table-card">
+        <el-table :data="stats.recent_models" style="width: 100%" v-loading="loading">
+          <el-table-column prop="model_name" label="Model Name" min-width="180" />
+          <el-table-column prop="accuracy" label="Accuracy" width="150">
+            <template #default="scope">
+              <el-tag :type="scope.row.accuracy > 0.8 ? 'success' : 'warning'">
+                {{ (scope.row.accuracy * 100).toFixed(2) }}%
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="precision" label="Precision" width="150">
+            <template #default="scope">
+              {{ (scope.row.precision * 100).toFixed(2) }}%
+            </template>
+          </el-table-column>
+          <el-table-column prop="train_date" label="Date" width="200">
+            <template #default="scope">
+              {{ new Date(scope.row.train_date).toLocaleDateString() }} 
+              {{ new Date(scope.row.train_date).toLocaleTimeString() }}
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-card>
+    </div>
+  </div>
 </template>
 
 <style scoped>
-.home-layout {
-  min-height: 100vh;
-  min-width: 1068px;
-  width: 100%;
-  background: radial-gradient(ellipse at center, #071029 0%, #021122 60%);
-  color: #cfe6ff;
-  display: flex;
+.dashboard-container {
+  padding: 8px;
 }
-.sidebar {
-  padding: 1.5rem 1rem;
-  border-right: 1px solid rgba(255, 255, 255, 0.04);
-  background: linear-gradient(180deg, rgba(10, 30, 60, 0.6), rgba(5, 15, 30, 0.4));
-  flex-shrink: 0;
-  transition: width 0.3s;
-}
-.main-container {
-  flex: 1;
-  min-width: 0;
-  overflow-x: auto;
-}
-.brand {
-  transition: opacity 0.3s;
-}
-.brand.collapsed .subtitle {
-  opacity: 0;
-}
-.brand .logo {
-  font-weight: 700;
-  font-size: 1.25rem;
-  color: #7fd1ff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.brand .subtitle {
-  font-size: 0.8rem;
-  color: #8fbfff;
-  margin-bottom: 1rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: opacity 0.3s;
-}
-.menu {
-  border: none;
-  background: transparent;
-}
-.sidebar-footer {
-  margin-top: 2rem;
-  font-size: 0.75rem;
-  color: #7ea8d6;
-}
+
 .header {
-  background: transparent;
-  color: #e6f4ff;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  margin-bottom: 32px;
 }
-.header-title {
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.stat-card {
+  border: none;
+  border-radius: 12px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  font-size: 0.875rem;
   font-weight: 600;
-  letter-spacing: 0.6px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
-.main-content {
-  padding: 1.5rem;
+
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 8px;
 }
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+
+.unit {
+  font-size: 1.25rem;
+  color: #64748b;
+  margin-left: 4px;
 }
-.collapse-btn {
-  color: #9fb8ff;
+
+.highlight-card .stat-value {
+  color: var(--theme-primary); 
+}
+
+.recent-section {
+  margin-top: 40px;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 16px;
+  padding-left: 4px;
+}
+
+.table-card {
+  border: 1px solid #f1f5f9;
+  border-radius: 12px;
 }
 </style>

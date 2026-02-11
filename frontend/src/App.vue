@@ -1,95 +1,57 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
-import { ref } from 'vue'
-import { ElConfigProvider } from 'element-plus'
-
-// import element-plus English locale
-// mport en from 'element-plus/dist/locale/en.mjs'
-
-// Set language to english
-// const locale = ref(en)
+import { RouterView } from 'vue-router'
+import MainLayout from './views/MainLayout.vue'
 </script>
 
 <template>
-  <!-- <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
-    </div>
-  </header> -->
-
-  <RouterView />
+  <MainLayout>
+    <RouterView />
+  </MainLayout>
 </template>
 
-<style scoped>
+<style>
 @import 'element-plus/dist/index.css';
 
-header {
-  line-height: 1.5;
-  max-height: 100vh;
+/* 全局样式覆盖 - 适配 Tech Theme */
+:root {
+  --theme-primary: #38bdf8; /* 对应左侧菜单的高亮蓝 */
+  --theme-primary-fade: rgba(56, 189, 248, 0.08); /* 悬停时的淡蓝光晕 */
 }
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
+/* 表格整体美化 */
+.el-table {
+  --el-table-border-color: #f1f5f9;
+  --el-table-header-bg-color: #f8fafc;
+  --el-table-row-hover-bg-color: var(--theme-primary-fade);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
+/* 表头样式 - 简洁、大写、弱化视觉噪音 */
+.el-table th.el-table__cell {
+  background-color: var(--el-table-header-bg-color) !important;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  height: 48px;
 }
 
-nav a.router-link-exact-active {
-  color: var(--color-text);
+/* 单元格内边距调整，增加呼吸感 */
+.el-table .el-table__cell {
+  padding: 12px 0;
 }
 
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
+/* 按钮主色调统一 - 确保表格内的按钮也符合主题 */
+.el-button--primary {
+  --el-button-bg-color: var(--theme-primary);
+  --el-button-border-color: var(--theme-primary);
 }
 
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
+/* 分页选中态颜色 */
+.el-pagination.is-background .el-pager li:not(.is-disabled).is-active {
+  background-color: var(--theme-primary);
 }
 </style>
