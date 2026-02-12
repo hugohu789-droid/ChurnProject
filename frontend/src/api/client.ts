@@ -7,8 +7,4 @@ export const client = axios.create({
   timeout: 30_000,
 })
 
-export const getDashboardStats = () => {
-  return client.get('/dashboard/stats')
-}
-
 export default client
