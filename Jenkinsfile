@@ -2,8 +2,7 @@ pipeline {
     agent any
     
     environment {
-        // 可根据需要修改 Node 和 Docker 环境
-        DEPLOY_SERVER = "test"   // SSH配置中定义的服务器名
+        DEPLOY_SERVER = "test"
     }
     
     tools {
