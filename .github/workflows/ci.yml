@@ -62,3 +62,46 @@ jobs:
 
     - name: Build Project
       run: npm run build
+
+deploy:
+  needs: [build-backend, build-frontend]
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+
+    # 1. Rebuild the front end
+    - name: Build Frontend for Deploy
+      working-directory: ./frontend
+      run: |
+        npm ci
+        npm run build
+
+    # 2. Send the frontend dist and backend code to EC2
+    - name: Copy Files to EC2
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        source: "frontend/dist/**,backend/**,deploy/docker-compose.yml"
+        target: "/home/ubuntu/churn-project"
+        strip_components: 0 # Retain the original directory structure
+        rm: true
+
+    # 3. Restart Docker containers via SSH on a remote server
+    - name: Restart Services on EC2
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          cd /home/ubuntu/churn-project
+          # Ensure directory permissions are correct for Nginx to read
+          sudo chmod -R 755 frontend/dist
+          # Restart the backend container
+          cd deploy
+          sudo docker compose down
+          sudo docker compose up -d --build
+          # Clean up useless images to save space
+          sudo docker system prune -f
