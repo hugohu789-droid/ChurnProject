@@ -85,9 +85,9 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "frontend-dist.tar.gz,backend/**,deploy/docker-compose.yml"
+          source: "frontend-dist.tar.gz,backend/**"
           target: "/home/ubuntu/churn-project"
-          rm: true
+          rm: false
 
       # 3. Restart Docker containers via SSH on a remote server
       - name: Extract and Restart
@@ -98,6 +98,8 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd /home/ubuntu/churn-project
+
+            sudo rm -rf frontend/dist/*
 
             sudo mkdir -p frontend/dist
             sudo tar -xzvf frontend-dist.tar.gz -C frontend/dist
