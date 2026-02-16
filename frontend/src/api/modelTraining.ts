@@ -48,11 +48,11 @@ export async function deleteRecord(id: string) {
   return res.data
 }
 
-export async function triggerTrain(id: string, modelName?: string) {
+export async function triggerTrain(id: number, modelName?: string) {
   // send optional modelName in body so backend can name the model/run
   const body = {
     id: id,
-    modelName: modelName,
+    model_name: modelName,
   }
   //modelName ? { modelName } : undefined
   const res = await client.post(`/modeltraining/train`, body)

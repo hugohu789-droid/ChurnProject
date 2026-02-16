@@ -89,8 +89,8 @@ defineProps<{
 
 const emit = defineEmits<{
   (e: 'refresh'): void
-  (e: 'details', id: string): void
-  (e: 'delete', id: string): void
+  (e: 'details', id: number): void
+  (e: 'delete', id: number): void
   (e: 'page-change', page: number): void
   (e: 'size-change', size: number): void
 }>()
@@ -146,7 +146,7 @@ async function submitTrain() {
 
   isSubmitting.value = true
   try {
-    await triggerTrain(selectedId.value.toString(), formModel.modelName || undefined)
+    await triggerTrain(selectedId.value, formModel.modelName || undefined)
     ElNotification({ title: 'Training', message: 'Training started successfully', type: 'success' })
     dialogVisible.value = false
     formModel.modelName = ''

@@ -86,7 +86,7 @@ async function onDelete(id: string) {
   }
 }
 
-async function onTrain(id: string) {
+async function onTrain(id: number) {
   try {
     await api.triggerTrain(id)
     // quick refresh to show training state
