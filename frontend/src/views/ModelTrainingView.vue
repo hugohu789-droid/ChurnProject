@@ -68,7 +68,7 @@ function onUploaded() {
   load()
 }
 
-async function onDelete(id: string) {
+async function onDelete(id: number) {
   try {
     await ElMessageBox.confirm('Are you sure you want to delete this record?', 'Warning', {
       type: 'warning',
@@ -97,7 +97,7 @@ async function onTrain(id: number) {
   }
 }
 
-async function onDetails(id: string) {
+async function onDetails(id: number) {
   try {
     const d = await api.getDetails(id)
     selectedDetails.value = d

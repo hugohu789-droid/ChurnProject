@@ -43,7 +43,7 @@ export async function fetchHistory(page = 1, pageSize = 10): Promise<FetchHistor
   return res.data
 }
 
-export async function deleteRecord(id: string) {
+export async function deleteRecord(id: number) {
   const res = await client.delete(`/modeltraining/${id}`)
   return res.data
 }
@@ -59,7 +59,7 @@ export async function triggerTrain(id: number, modelName?: string) {
   return res.data
 }
 
-export async function getDetails(id: string) {
+export async function getDetails(id: number) {
   const res = await client.get(`/training/${id}`)
   return res.data
 }
