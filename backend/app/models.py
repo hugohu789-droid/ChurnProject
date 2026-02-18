@@ -4,9 +4,10 @@ from datetime import datetime
 
 Base = declarative_base()
 
+
 class FileUpload(Base):
     __tablename__ = "file_uploads"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     original_filename = Column(String)
     saved_filename = Column(String)
@@ -15,9 +16,10 @@ class FileUpload(Base):
     file_size = Column(Integer)
     status = Column(String)
 
+
 class TrainModel(Base):
     __tablename__ = "train_models"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     file_id = Column(Integer)
     record_number = Column(Integer)
@@ -29,9 +31,10 @@ class TrainModel(Base):
     model2_path = Column(String)
     train_date = Column(DateTime, default=datetime.now)
 
+
 # class PredictFileUpload(Base):
 #     __tablename__ = "prdict_file_uploads"
-    
+
 #     id = Column(Integer, primary_key=True, index=True)
 #     original_filename = Column(String)
 #     saved_filename = Column(String)
@@ -41,9 +44,10 @@ class TrainModel(Base):
 #     model_id = Column(String)
 #     results_path = Column(String)
 
+
 class PredictionHistory(Base):
     __tablename__ = "prediction_histories"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     original_filename = Column(String)
     saved_filename = Column(String)
@@ -55,7 +59,8 @@ class PredictionHistory(Base):
     predict_date = Column(DateTime, default=datetime.now)
     status = Column(String)
 
-engine = create_engine('sqlite:///./fileupload.db')
+
+engine = create_engine("sqlite:///./fileupload.db")
 Base.metadata.create_all(bind=engine)
 
 if __name__ == "__main__":

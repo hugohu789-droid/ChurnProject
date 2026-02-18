@@ -1,0 +1,36 @@
+[flake8]
+# --- Basic Configuration ---
+# The maximum line length. 
+# Standard PEP8 is 79, but 88 (Black style) or 100/120 is more common in modern dev.
+max-line-length = 88
+
+# --- Exclusions ---
+# Directories to ignore (virtual envs, git, cache, builds)
+exclude =
+    .git,
+    __pycache__,
+    venv,
+    .venv,
+    build,
+    dist,
+    .eggs,
+    *.egg-info,
+    migrations
+
+# --- Error Codes to Ignore ---
+# E203: Whitespace before ':' (Conflict with Black formatter)
+# E501: Line too long (Let Black handle formatting, or ignore strict length checks)
+# W503: Line break before binary operator (Deprecated by newer PEP8 standards)
+ignore = E203, E501, W503
+
+# --- Complexity Check ---
+# McCabe complexity threshold.
+# If a function has more than 10 nested loops/ifs, it will flag an error.
+# This forces you to write smaller, cleaner functions.
+max-complexity = 10
+
+# --- Output Formatting ---
+# Display the error code, the source file, and the line number clearly.
+format = default
+show-source = True
+statistics = True
