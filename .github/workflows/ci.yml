@@ -97,7 +97,7 @@ jobs:
       # 2. Compress the front-end file (for faster SCP transfer)
       - name: Compress Frontend Assets
         run: |
-          tar -zcvf ../frontend-dist.tar.gz -C frontend-dist .
+          tar -zcvf ./frontend-dist.tar.gz -C frontend-dist .
           echo "=== List file in Runner ==="
           ls -lh frontend-dist.tar.gz
 
