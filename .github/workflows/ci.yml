@@ -7,6 +7,9 @@ on:
     branches: [ "main" ]
 
 jobs:
+  # ------------------------------------------------------------------
+  # JOB 1: Backend Integration (Lint + Test)
+  # ------------------------------------------------------------------
   build-backend:
     runs-on: ubuntu-latest
     defaults:
@@ -20,17 +23,17 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: "3.13"
+        cache: 'pip'
         
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install flake8 pytest httpx
         
-    - name: Lint with flake8 (Optional)
+    - name: Lint with Flake8
       run: |
-        pip install flake8
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --show-source --statistics
 
     - name: Run Backend Tests
       run: |
@@ -38,6 +41,9 @@ jobs:
         export PYTHONPATH=$PYTHONPATH:$(pwd)/app
         pytest app/tests/
 
+  # ------------------------------------------------------------------
+  # JOB 2: Frontend Build (Test + Build + Upload Artifact)
+  # ------------------------------------------------------------------
   build-frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -63,33 +69,48 @@ jobs:
     - name: Build Project
       run: npm run build
 
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-dist
+        path: frontend/dist/
+        retention-days: 1
+
+  # ------------------------------------------------------------------
+  # JOB 3: Deployment (Download Artifact + Ship to EC2)
+  # ------------------------------------------------------------------
   deploy:
     needs: [build-backend, build-frontend]
+    if: github.ref == 'refs/heads/main' 
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
-      # 1. Rebuild the front end
-      - name: Build Frontend for Deploy
-        working-directory: ./frontend
-        run: |
-          npm ci
-          npm run build
-          tar -zcvf ../frontend-dist.tar.gz -C dist .
+      # 1. Download the pre-built front-end artifacts (to avoid recompiling)
+      - name: Download Frontend Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: frontend-dist
+          path: frontend-dist
+
+      # 2. Compress the front-end file (for faster SCP transfer)
+      - name: Compress Frontend Assets
+        run: tar -zcvf ../frontend-dist.tar.gz -C frontend-dist .
 
 
-      # 2. Send the frontend dist and backend code to EC2
+      # 3. Send the frontend dist and backend code to EC2
       - name: Copy Compressed Artifact to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "frontend-dist.tar.gz,backend/**"
+          source: "frontend-dist.tar.gz,backend/**,!backend/venv/**,!backend/__pycache__/**"
           target: "/home/ubuntu/churn-project"
           rm: false
 
-      # 3. Restart Docker containers via SSH on a remote server
+      # 4. Restart Docker containers via SSH on a remote server
       - name: Extract and Restart
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -100,8 +121,8 @@ jobs:
             cd /home/ubuntu/churn-project
 
             sudo rm -rf frontend/dist/*
-
             sudo mkdir -p frontend/dist
+
             sudo tar -xzvf frontend-dist.tar.gz -C frontend/dist
             rm frontend-dist.tar.gz
 
