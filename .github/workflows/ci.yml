@@ -96,7 +96,10 @@ jobs:
 
       # 2. Compress the front-end file (for faster SCP transfer)
       - name: Compress Frontend Assets
-        run: tar -zcvf ../frontend-dist.tar.gz -C frontend-dist .
+        run: |
+          tar -zcvf ../frontend-dist.tar.gz -C frontend-dist .
+          echo "=== List file in Runner ==="
+          ls -lh frontend-dist.tar.gz
 
 
       # 3. Send the frontend dist and backend code to EC2
@@ -106,9 +109,9 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "frontend-dist.tar.gz,backend/**,!backend/venv/**,!backend/__pycache__/**"
+          source: "./frontend-dist.tar.gz,./backend/**"
           target: "/home/ubuntu/churn-project"
-          rm: false
+          overwrite: true
 
       # 4. Restart Docker containers via SSH on a remote server
       - name: Extract and Restart
@@ -120,14 +123,22 @@ jobs:
           script: |
             cd /home/ubuntu/churn-project
 
-            sudo rm -rf frontend/dist/*
-            sudo mkdir -p frontend/dist
+            echo "=== Debug: List files in remote directory ==="
+            ls -la
 
-            sudo tar -xzvf frontend-dist.tar.gz -C frontend/dist
-            rm frontend-dist.tar.gz
+            if [ -f "frontend-dist.tar.gz" ]; then
+              echo "Found tarball, deploying frontend..."
+              sudo rm -rf frontend/dist/*
+              sudo mkdir -p frontend/dist
+              sudo tar -xzvf frontend-dist.tar.gz -C frontend/dist
+              rm frontend-dist.tar.gz
 
-            # Ensure directory permissions are correct for Nginx to read
-            sudo chmod -R 755 frontend/dist
+              sudo chmod -R 755 frontend/dist
+            else
+              echo "❌ Error: frontend-dist.tar.gz NOT FOUND in $(pwd)"
+              exit 1
+            fi
+
             # Restart the backend container
             cd backend
             sudo docker compose down
