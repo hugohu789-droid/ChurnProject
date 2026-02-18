@@ -3,14 +3,15 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-from churn_api import app, get_db
-from models import Base
+
 import sys
 import os
 
 # Ensure that the app module can be imported
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from churn_api import app, get_db  # noqa: E402
+from models import Base            # noqa: E402
 
 # 1. Configure a test in-memory database (SQLite)
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
