@@ -1,4 +1,4 @@
-# Customer Churn Prediction System
+# ML Platform — Self-Service Model Registry & Inference
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Vue.js](https://img.shields.io/badge/frontend-Vue.js%203-42b883)
@@ -10,7 +10,7 @@
 
 ## 📖 About The Project
 
-The **Customer Churn Prediction System** is a full-stack machine learning application designed to help businesses proactively identify customers at risk of cancellation.
+A full-stack platform for registering trained ML models, browsing the registry, running predictions on new datasets, and downloading results.
 
 Unlike simple demo scripts, this project demonstrates an **end-to-end Data Science Lifecycle implementation**—from data ingestion and asynchronous model training to RESTful API deployment and interactive visualization. It is engineered with a focus on **Type Safety**, **Scalability**, and **DevOps Automation**.
 
@@ -26,13 +26,11 @@ Unlike simple demo scripts, this project demonstrates an **end-to-end Data Scien
 
 ## 🛠️ Technical Stack
 
-| Domain | Technologies |
-| :--- | :--- |
-| **Frontend** | Vue 3 (Composition API), TypeScript, Vite, Element Plus, Axios |
-| **Backend** | Python 3.9+, FastAPI, SQLAlchemy, Pydantic |
-| **Data Science** | Pandas, Scikit-learn, NumPy |
-| **Infrastructure** | AWS EC2, Nginx, Docker, Docker Compose |
-| **DevOps** | GitHub Actions, Flake8, Pytest, Jest |
+- **Backend**: Python 3.11, FastAPI, SQLAlchemy, Pydantic
+- **Frontend**: Vue 3 + TypeScript, Vite, Pinia, Element Plus
+- **ML**: scikit-learn, pandas, numpy
+- **Infra**: Docker Compose, AWS EC2, Nginx
+- **CI/CD**: GitHub Actions (Pytest + Flake8)
 
 ---
 
@@ -112,8 +110,8 @@ Follow these steps to set up the project locally for development.
 ### 1. Clone the Repository
 
 ```bash
-git clone [https://github.com/hugohu789-droid/ChurnProject.git](https://github.com/hugohu789-droid/ChurnProject.git)
-cd ChurnProject
+git clone [https://github.com/hugohu789-droid/ml-platform.git](https://github.com/hugohu789-droid/ml-platform.git)
+cd ml-platform
 ```
 
 ### 2. Backend Setup
@@ -154,7 +152,7 @@ npm run dev
 ## 📂 Project Structure
 
 ```text
-ChurnProject/
+ml-platform/
 ├── .github/workflows/  # CI/CD Pipeline definitions
 ├── backend/
 │   ├── app/
