@@ -1,198 +1,204 @@
-# ML Platform — Self-Service Model Registry & Inference
+# ML Platform
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Vue.js](https://img.shields.io/badge/frontend-Vue.js%203-42b883)
-![TypeScript](https://img.shields.io/badge/language-TypeScript-3178c6)
-![FastAPI](https://img.shields.io/badge/backend-FastAPI-009688)
-![Python](https://img.shields.io/badge/language-Python%203.9+-3776ab)
-![AWS](https://img.shields.io/badge/deployment-AWS%20EC2-FF9900)
-![Docker](https://img.shields.io/badge/container-Docker-2496ED)
+A full-stack, self-service machine learning platform for training churn-prediction models and running batch inference — built to production standards.
 
-## 📖 About The Project
-
-A full-stack platform for registering trained ML models, browsing the registry, running predictions on new datasets, and downloading results.
-
-Unlike simple demo scripts, this project demonstrates an **end-to-end Data Science Lifecycle implementation**—from data ingestion and asynchronous model training to RESTful API deployment and interactive visualization. It is engineered with a focus on **Type Safety**, **Scalability**, and **DevOps Automation**.
-
-### ✨ Key Features
-
-* **📊 Interactive Dashboard**: Real-time visualization of system metrics and model performance (Accuracy/Precision) built with **Element Plus**.
-* **🧠 Asynchronous Training**: Leverages **FastAPI BackgroundTasks** to handle resource-intensive ML training jobs without blocking the main thread.
-* **🔄 End-to-End Pipeline**: Seamless flow from raw CSV upload -> Data Cleaning -> Training -> Inference -> Reporting.
-* **🛡️ Type-Safe Architecture**: Full TypeScript implementation on the frontend synced with Pydantic models on the backend.
-* **🚀 Automated DevOps**: A custom **GitHub Actions CI/CD pipeline** that automates testing and deployment to AWS EC2 using an efficient on-premise build strategy.
+![CI](https://github.com/hugohu789-droid/ml-platform/actions/workflows/ci.yml/badge.svg)
+![Python](https://img.shields.io/badge/Python-3.13-blue?logo=python)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.121-009688?logo=fastapi)
+![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vue.js)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql)
 
 ---
 
-## 🛠️ Technical Stack
+## Features
 
-- **Backend**: Python 3.11, FastAPI, SQLAlchemy, Pydantic
-- **Frontend**: Vue 3 + TypeScript, Vite, Pinia, Element Plus
-- **ML**: scikit-learn, pandas, numpy
-- **Infra**: Docker Compose, AWS EC2, Nginx
-- **CI/CD**: GitHub Actions (Pytest + Flake8)
+| Area | Details |
+|---|---|
+| **Auth** | JWT access + refresh tokens, bcrypt passwords, route guards |
+| **Dataset management** | CSV upload, versioned storage, metadata tracking |
+| **Model training** | Async background jobs, scikit-learn / XGBoost / LightGBM, Optuna HPO |
+| **Model registry** | Persist trained models with accuracy / recall / precision metrics |
+| **Batch inference** | Upload new data → predict → download results CSV |
+| **Dashboard** | Live stats: files uploaded, models trained, avg accuracy, recent activity |
+| **API** | Versioned REST API (`/api/v1`), OpenAPI docs at `/docs` |
+| **Database** | SQLite (dev) → PostgreSQL (prod) via async SQLAlchemy + Alembic |
+| **CI/CD** | GitHub Actions: lint → test → build → deploy to EC2 |
 
 ---
 
-## 🏗️ System Architecture & Deployment
+## Tech Stack
 
-The application follows a **Microservices-ready** architecture deployed on a single AWS EC2 instance. **Nginx** acts as the reverse proxy and static file server, ensuring secure and efficient traffic routing.
+### Backend
+- **FastAPI** — async Python web framework
+- **SQLAlchemy 2 (async)** — ORM with `asyncpg` (PostgreSQL) or `aiosqlite` (SQLite)
+- **Alembic** — database schema migrations
+- **python-jose** + **passlib** — JWT auth and bcrypt password hashing
+- **pydantic-settings** — type-safe environment configuration
+- **scikit-learn**, **XGBoost**, **LightGBM**, **Optuna** — ML pipeline
 
-### 1. Runtime Architecture
-The application follows a **Microservices-ready** architecture deployed on a single AWS EC2 instance using Docker Compose. **Nginx** acts as the reverse proxy and static file server, ensuring secure and efficient traffic routing.
+### Frontend
+- **Vue 3** + **TypeScript** — reactive SPA
+- **Pinia** — state management (auth store, etc.)
+- **Vue Router 4** — client-side routing with navigation guards
+- **Axios** — HTTP client with automatic token refresh interceptor
+- **Element Plus** — UI component library (dark-themed)
+- **Vite** — bundler
 
-```mermaid
-graph TD
-    User([User / Client]) -->|HTTPS / Port 443| Nginx[Nginx Reverse Proxy]
-    
-    subgraph AWS_EC2 [AWS EC2 Instance]
-        style AWS_EC2 fill:#f9f9f9,stroke:#333,stroke-width:2px
-        
-        Nginx -->|Serve Static Assets| Vue[Frontend Container<br />Vue 3 / Vite]
-        Nginx -->|Proxy /api| FastAPI[Backend Container<br/>FastAPI / Uvicorn]
-        
-        FastAPI <-->|Read/Write| DB[(Database<br/>SQLite/PostgreSQL)]
-        FastAPI -->|Async Processing| BG[Background Tasks<br/>Model Training]
-        
-        BG -.->|Load/Save| ModelStore[Model Artifacts<br/>Disk Storage]
-    end
+### Infrastructure
+- **Docker Compose** — local dev and production orchestration
+- **PostgreSQL 16** — production database
+- **Nginx** — reverse proxy / static file serving
+- **AWS EC2** — compute
+
+---
+
+## Project Structure
+
+```
+ml-platform/
+├── backend/
+│   ├── app/
+│   │   ├── api/v1/          # Route handlers (auth, datasets, training, models, predictions)
+│   │   ├── core/            # Config, database engine, security (JWT)
+│   │   ├── db/models/       # SQLAlchemy ORM models
+│   │   ├── schemas/         # Pydantic request / response models
+│   │   ├── services/        # Business logic (auth, ML training)
+│   │   ├── dependencies.py  # FastAPI dependency injection (get_db, get_current_user)
+│   │   └── main.py          # App factory with lifespan hooks
+│   ├── migrations/          # Alembic migrations
+│   ├── tests/               # pytest async test suite
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── .env.example
+├── frontend/
+│   ├── src/
+│   │   ├── api/             # Axios client + per-resource API modules
+│   │   ├── composables/     # Reusable Vue composables (useAuth)
+│   │   ├── layouts/         # App / Auth layout wrappers
+│   │   ├── router/          # Vue Router with auth guards
+│   │   ├── stores/          # Pinia stores (auth)
+│   │   ├── types/           # TypeScript interfaces
+│   │   └── views/           # Page components (auth/LoginView, auth/RegisterView, …)
+│   └── Dockerfile
+├── deploy/
+│   ├── docker-compose.yml   # Production compose
+│   └── nginx.conf
+├── docs/
+│   └── architecture.md      # System design overview
+├── docker-compose.yml        # Local dev (PostgreSQL + backend + frontend)
+└── .env.example
 ```
 
-### 2. CI/CD Pipeline (Automated Deployment)
-To optimize costs for this project, I implemented an "On-Premise Build" strategy instead of using an external container registry. The pipeline ensures that only verified code reaches the production server.
-
-Workflow Steps:
-
-**Validation**: GitHub Actions runs parallel tests for Frontend (Jest) and Backend (Pytest).
-
-**Transfer**: Verified artifacts are securely transferred to AWS EC2 via SCP.
-
-**Live Build**: Docker images are built directly on the server to ensure environment consistency.
-
-```mermaid
-sequenceDiagram
-    participant Dev as Developer
-    participant GH as GitHub Actions
-    participant EC2 as AWS Production Server
-    
-    Dev->>GH: Push Code to 'main'
-    
-    Note over GH: 1. Parallel Validation
-    par Testing
-        GH->>GH: Frontend Unit Tests
-    and Linting
-        GH->>GH: Backend Pytest & Flake8
-    end
-    
-    Note over GH, EC2: 2. Secure Transfer (SCP)
-    GH->>EC2: Copy Backend Code + /dist
-    
-    Note over EC2: 3. Remote Build & Deploy
-    GH->>EC2: SSH Trigger
-    activate EC2
-    EC2->>EC2: docker compose up -d --build
-    deactivate EC2
-    
-    EC2-->>Dev: Deployment Successful
-```
 ---
 
-## 🚀 Getting Started
-
-Follow these steps to set up the project locally for development.
+## Quick Start
 
 ### Prerequisites
+- Docker + Docker Compose
+- Node.js ≥ 20 (for frontend-only dev)
+- Python ≥ 3.11 (for backend-only dev)
 
-*   **Node.js** (v18+) & npm
-*   **Python** (v3.9+)
-*   **Git**
-
-### 1. Clone the Repository
+### 1. Clone and configure
 
 ```bash
-git clone [https://github.com/hugohu789-droid/ml-platform.git](https://github.com/hugohu789-droid/ml-platform.git)
+git clone https://github.com/hugohu789-droid/ml-platform.git
 cd ml-platform
+cp .env.example .env
+cp backend/.env.example backend/.env
 ```
 
-### 2. Backend Setup
+Edit `backend/.env` — set a strong `SECRET_KEY` and your `DATABASE_URL`.
 
-Navigate to the backend directory, set up a virtual environment, and install dependencies.
+### 2. Run with Docker Compose (recommended)
+
+```bash
+docker compose up --build
+```
+
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:5173 |
+| Backend API | http://localhost:8000 |
+| API docs | http://localhost:8000/docs |
+| PostgreSQL | localhost:5432 |
+
+### 3. Backend only (local Python)
 
 ```bash
 cd backend
-
-# Create & activate virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: .\venv\Scripts\activate
-
-# Install dependencies
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+cp .env.example .env
 
-# Run the server (Hot Reload enabled)
-uvicorn app.churn_api:app --reload --host 0.0.0.0 --port 8000
+alembic upgrade head
+uvicorn app.main:app --reload
 ```
-*The API will be available at `http://localhost:8000`*
-*API Docs: `http://localhost:8000/docs`*
 
-### 3. Frontend Setup
+### 4. Frontend only
 
 ```bash
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start development server
 npm run dev
 ```
-*The application will be available at `http://localhost:5173`*
 
 ---
 
-## 📂 Project Structure
+## Authentication
 
-```text
-ml-platform/
-├── .github/workflows/  # CI/CD Pipeline definitions
-├── backend/
-│   ├── app/
-│   │   ├── tests/   # tests/ directory
-│   │       ├── test_api.py    #test code for the API
-│   │   ├── churn_api.py    # FastAPI entry point & Routes
-│   │   ├── models.py       # Pydantic & SQLAlchemy Models
-│   │   └── modeltrain.py   # Core ML Logic (Scikit-Learn)
-│   ├── requirements.txt
-│   └── docker-compose.yml      # Container Orchestration
-├── frontend/
-│   ├── src/
-│   │   ├── api/            # TypeScript API Service layer
-│   │   ├── views/          # Vue Components (Dashboard, Prediction)
-│   │   ├── stores/         # Pinia State Management (Optional)
-│   │   └── types/          # TypeScript Interfaces
-│   ├── package.json
-└── README.md
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api/v1/auth/register` | POST | Create a new account |
+| `/api/v1/auth/login` | POST | Get access + refresh tokens |
+| `/api/v1/auth/refresh` | POST | Rotate tokens |
+| `/api/v1/auth/me` | GET | Get current user info |
+
+All other endpoints require `Authorization: Bearer <access_token>`.
+
+---
+
+## Database
+
+The project works with both **SQLite** (dev, zero-config) and **PostgreSQL** (prod) via a single env var:
+
+```bash
+# Local dev
+DATABASE_URL=sqlite+aiosqlite:///./ml_platform.db
+
+# Production (Neon / Supabase / Railway / self-hosted)
+DATABASE_URL=postgresql+asyncpg://user:password@host:5432/ml_platform
+```
+
+Run migrations:
+
+```bash
+alembic revision --autogenerate -m "describe your change"
+alembic upgrade head
 ```
 
 ---
 
-## 🔮 Future Improvements
+## Running Tests
 
-**Authentication**: Implement JWT (JSON Web Token) based login system for multi-user support.
-
-**Advanced Monitoring**: Integrate Prometheus and Grafana for real-time server metrics.
-
-**Model Versioning**: Implement MLflow to track model experiments and versions.
-
-**Caching**: Introduce Redis to cache prediction results and reduce latency.
+```bash
+cd backend
+pytest tests/ -v
+```
 
 ---
 
-## 👤 Author
+## CI/CD
 
-**Hugo**
-* **Role**: Senior Software Developer (C++ / Java / C# / Python / Full Stack)
-* **GitHub**: [@hugohu789-droid]()
+GitHub Actions pipeline:
+
+1. **build-backend** — Flake8 lint + pytest (SQLite in CI)
+2. **build-frontend** — TypeScript type-check + Vitest + Vite build
+3. **deploy** *(main branch only)* — SCP to EC2, restart Docker Compose
+
+Required GitHub Secrets: `EC2_HOST`, `EC2_USERNAME`, `EC2_SSH_KEY`.
 
 ---
 
-*This project is for educational and demonstration purposes.*
+## License
+
+MIT
