@@ -1,36 +1,99 @@
-@import './base.css';
+/* ─── Design Tokens ─────────────────────────────────────────────────────── */
+:root {
+  --color-bg: #0d0f14;
+  --color-surface: #141720;
+  --color-surface-raised: #1c2030;
+  --color-input-bg: #0d0f14;
 
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-weight: normal;
-  justify-content: center;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.16);
+
+  --color-text-primary: #f0f2f5;
+  --color-text-secondary: #9ca3af;
+  --color-text-muted: #6b7280;
+
+  --color-accent: #6366f1;
+  --color-accent-hover: #4f46e5;
+  --color-accent-glow: rgba(99, 102, 241, 0.25);
+
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #3b82f6;
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 1rem;
+
+  --transition-fast: 0.12s ease;
+  --transition-base: 0.2s ease;
 }
 
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
+/* ─── Reset ─────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
-}
+#app { min-height: 100vh; }
 
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
+/* ─── Typography ─────────────────────────────────────────────────────────── */
+h1, h2, h3, h4 { color: var(--color-text-primary); font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+p { color: var(--color-text-secondary); }
+a { color: var(--color-accent); text-decoration: none; transition: opacity var(--transition-fast); }
+a:hover { opacity: 0.85; }
 
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
-}
+/* ─── Scrollbar ─────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
+
+/* ─── Utility classes ────────────────────────────────────────────────────── */
+.card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 1.5rem; }
+
+.badge { display: inline-flex; align-items: center; padding: 0.2rem 0.6rem; font-size: 0.75rem; font-weight: 600; border-radius: 9999px; letter-spacing: 0.03em; }
+.badge-success { background: rgba(16, 185, 129, 0.15); color: var(--color-success); }
+.badge-warning { background: rgba(245, 158, 11, 0.15); color: var(--color-warning); }
+.badge-danger  { background: rgba(239, 68, 68, 0.15);  color: var(--color-danger); }
+.badge-info    { background: rgba(59, 130, 246, 0.15); color: var(--color-info); }
+.badge-default { background: var(--color-surface-raised); color: var(--color-text-secondary); }
+
+.btn { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 1rem; border-radius: var(--radius-md); font-size: 0.875rem; font-weight: 600; cursor: pointer; border: none; transition: all var(--transition-fast); white-space: nowrap; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: var(--color-accent); color: #fff; }
+.btn-primary:hover:not(:disabled) { background: var(--color-accent-hover); transform: translateY(-1px); }
+.btn-secondary { background: var(--color-surface-raised); color: var(--color-text-primary); border: 1px solid var(--color-border); }
+.btn-secondary:hover:not(:disabled) { border-color: var(--color-border-strong); }
+.btn-danger { background: rgba(239, 68, 68, 0.15); color: var(--color-danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+.btn-danger:hover:not(:disabled) { background: rgba(239, 68, 68, 0.25); }
+
+/* ─── Form inputs ────────────────────────────────────────────────────────── */
+input, select, textarea { background: var(--color-input-bg); border: 1px solid var(--color-border); border-radius: var(--radius-md); color: var(--color-text-primary); font-size: 0.9375rem; padding: 0.5rem 0.75rem; transition: border-color var(--transition-fast), box-shadow var(--transition-fast); outline: none; width: 100%; }
+input:focus, select:focus, textarea:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-glow); }
+input::placeholder, textarea::placeholder { color: var(--color-text-muted); }
+
+/* ─── Tables ─────────────────────────────────────────────────────────────── */
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted); padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-border); }
+td { padding: 0.875rem 1rem; font-size: 0.875rem; border-bottom: 1px solid var(--color-border); color: var(--color-text-secondary); }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--color-surface-raised); }
+
+/* ─── Animations ─────────────────────────────────────────────────────────── */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in { animation: fadeIn 0.25s ease both; }
+
+/* ─── Element Plus dark theme overrides ──────────────────────────────────── */
+.el-card { background: var(--color-surface) !important; border-color: var(--color-border) !important; }
+.el-table { background: var(--color-surface) !important; color: var(--color-text-secondary) !important; }
+.el-button--primary { background: var(--color-accent) !important; border-color: var(--color-accent) !important; }
