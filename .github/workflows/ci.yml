@@ -110,7 +110,7 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "./frontend-dist.tar.gz,./backend/**"
-          target: "/home/ubuntu/churn-project"
+          target: "/home/ubuntu/ml-platform"
           overwrite: true
 
       # 4. Restart Docker containers via SSH on a remote server
@@ -121,7 +121,7 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /home/ubuntu/churn-project
+            cd /home/ubuntu/ml-platform
 
             echo "=== Debug: List files in remote directory ==="
             ls -la
