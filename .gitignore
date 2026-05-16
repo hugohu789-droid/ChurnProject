@@ -69,6 +69,8 @@ backend/predictresults
 backend/trained_models
 backend/uploadfiles
 backend/fileupload.db
+backend/ml_platform.db
+backend/test.db
 
 # Unit test / coverage reports
 backend/htmlcov/
