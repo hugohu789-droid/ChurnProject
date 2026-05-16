@@ -1,0 +1,71 @@
+version: "3.9"
+
+# Local development stack — starts all services with hot-reload.
+# Copy .env.example to .env and fill in values before running.
+
+services:
+  # ─── PostgreSQL ───────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: ml_platform_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mluser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mlpassword}
+      POSTGRES_DB: ${POSTGRES_DB:-ml_platform}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mluser}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── Backend (FastAPI) ────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ml_platform_backend
+    restart: unless-stopped
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-mluser}:${POSTGRES_PASSWORD:-mlpassword}@db:5432/${POSTGRES_DB:-ml_platform}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ml_uploads:/app/uploadfiles
+      - ml_models:/app/trained_models
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app_net
+
+  # ─── Frontend (Vite dev server) ───────────────────────────────────────────
+  frontend:
+    image: node:22-alpine
+    container_name: ml_platform_frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: sh -c "npm install && npm run dev -- --host"
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000/api/v1
+    networks:
+      - app_net
+
+volumes:
+  postgres_data:
+  ml_uploads:
+  ml_models:
+
+networks:
+  app_net:
+    driver: bridge
