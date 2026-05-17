@@ -8,12 +8,7 @@ from app.db.models.dataset import FileUpload
 from app.db.models.ml_model import TrainModel
 from app.db.models.prediction import PredictionHistory
 
-# Lazy import to avoid loading heavy ML libs on startup
-import importlib
-
-
-def _get_modeltrain():
-    return importlib.import_module("modeltrain")
+from app.ml import pipeline as _pipeline
 
 
 def train_model_background(session_factory, id_value: int, model_name: str) -> None:
@@ -31,8 +26,7 @@ def train_model_background(session_factory, id_value: int, model_name: str) -> N
         base_name = os.path.splitext(file_record.saved_filename)[0]
         model_path = os.path.join(models_dir, f"{base_name}_churn_model.joblib")
 
-        modeltrain = _get_modeltrain()
-        metrics = modeltrain.train_model(file_record.file_path, model_save_path=model_path)
+        metrics = _pipeline.train_model(file_record.file_path, model_save_path=model_path)
 
         db.add(
             TrainModel(
@@ -71,8 +65,7 @@ def predict_model_background(session_factory, predict_id: int, file_path: str, m
 
         model = db.query(TrainModel).filter(TrainModel.id == model_id).first()
         if model:
-            modeltrain = _get_modeltrain()
-            modeltrain.predict(
+            _pipeline.predict(
                 data_path=file_path,
                 model_path=model.model1_path,
                 output_path=result_path,
