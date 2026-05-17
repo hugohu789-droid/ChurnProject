@@ -123,7 +123,8 @@ jobs:
             cd /home/ubuntu/ml-platform
 
             echo "=== Deploying frontend ==="
-            sudo rm -rf frontend/dist
+            sudo chown -R "$(whoami)":"$(whoami)" .
+            rm -rf frontend/dist
             mkdir -p frontend/dist
             tar -xzf frontend-dist.tar.gz -C frontend/dist
             rm frontend-dist.tar.gz
