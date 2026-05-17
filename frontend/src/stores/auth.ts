@@ -53,7 +53,11 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
     try {
       await authApi.register(payload)
-      await login({ email: payload.email, password: payload.password })
+      // Auto-login: get tokens directly then fetch user
+      const { data } = await authApi.login({ email: payload.email, password: payload.password })
+      setTokens(data.access_token, data.refresh_token)
+      await fetchMe()
+      await router.push('/dashboard')
     } catch (e: any) {
       error.value = e?.response?.data?.detail ?? 'Registration failed'
     } finally {
