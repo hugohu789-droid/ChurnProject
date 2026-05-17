@@ -1,5 +1,10 @@
 import { client } from './client'
 
+export type ModelMetadata = {
+  parameters: Record<string, unknown>
+  features: string[]
+}
+
 export type Model = {
   id: string
   file_id: number
@@ -9,6 +14,7 @@ export type Model = {
   precision: number
   model_name: string
   train_date: string
+  metadata?: ModelMetadata | null
 }
 
 export type Prediction = {

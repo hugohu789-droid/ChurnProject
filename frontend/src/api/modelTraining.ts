@@ -28,6 +28,11 @@ export async function fetchHistory(page = 1, pageSize = 10): Promise<FetchHistor
   return res.data
 }
 
+export async function getDetails(id: number): Promise<TrainingRecord> {
+  const res = await client.get(`/datasets/${id}`)
+  return res.data
+}
+
 export async function deleteRecord(id: number) {
   const res = await client.delete(`/datasets/${id}`)
   return res.data
@@ -38,4 +43,4 @@ export async function triggerTrain(id: number, modelName?: string) {
   return res.data
 }
 
-export default { uploadFile, fetchHistory, deleteRecord, triggerTrain }
+export default { uploadFile, fetchHistory, getDetails, deleteRecord, triggerTrain }
