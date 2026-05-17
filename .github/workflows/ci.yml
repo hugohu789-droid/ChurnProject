@@ -114,13 +114,18 @@ jobs:
 
       - name: Extract and restart services
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          APP_SECRET_KEY: ${{ secrets.APP_SECRET_KEY }}
+          APP_DATABASE_URL: ${{ secrets.APP_DATABASE_URL }}
+          APP_CORS_ORIGINS: ${{ secrets.APP_CORS_ORIGINS }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          envs: APP_SECRET_KEY,APP_DATABASE_URL,APP_CORS_ORIGINS
           script: |
             set -e
-            cd /home/ubuntu/ml-platform
+            cd /home/${{ secrets.EC2_USERNAME }}/ml-platform
 
             echo "=== Deploying frontend ==="
             sudo chown -R "$(whoami)":"$(whoami)" .
@@ -129,6 +134,20 @@ jobs:
             tar -xzf frontend-dist.tar.gz -C frontend/dist
             rm frontend-dist.tar.gz
             chmod -R 755 frontend/dist
+
+            echo "=== Writing backend .env ==="
+            cat > backend/.env <<EOF
+            APP_NAME="ML Platform"
+            SECRET_KEY=${APP_SECRET_KEY}
+            DATABASE_URL=${APP_DATABASE_URL}
+            CORS_ORIGINS=${APP_CORS_ORIGINS}
+            ACCESS_TOKEN_EXPIRE_MINUTES=30
+            REFRESH_TOKEN_EXPIRE_DAYS=7
+            UPLOAD_DIR=uploadfiles
+            MODELS_DIR=trained_models
+            PREDICT_DIR=predictfiles
+            RESULTS_DIR=predictresults
+            EOF
 
             echo "=== Restarting services ==="
             sudo docker compose down
