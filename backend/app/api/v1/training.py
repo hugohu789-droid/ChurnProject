@@ -2,7 +2,6 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import engine
 from app.db.models.dataset import FileUpload
 from app.dependencies import get_current_user, get_db
 from app.db.models.user import User
