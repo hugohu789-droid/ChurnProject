@@ -2,7 +2,7 @@ import { client } from './client'
 
 export type TrainingRecord = {
   id: number
-  original_filename: string // ISO date
+  original_filename: string
   saved_filename: string
   file_path?: string | null
   upload_time: string
@@ -16,52 +16,26 @@ export type FetchHistoryResponse = {
   total: number
 }
 
-// using shared client from src/api/client.ts
-
 export async function uploadFile(file: File) {
   const fd = new FormData()
   fd.append('file', file)
-  const res = await client.post('/upload', fd)
+  const res = await client.post('/datasets/upload', fd)
   return res.data
 }
 
 export async function fetchHistory(page = 1, pageSize = 10): Promise<FetchHistoryResponse> {
-  // use Vite's runtime flag for development
-  const body = {
-    page: page,
-    page_size: pageSize,
-  }
-  // if (import.meta.env.DEV) {
-  // const start = (page - 1) * pageSize
-  // const end = start + pageSize
-  // return {
-  //   records: mockTrainingRecords.slice(start, end),
-  //   total: mockTrainingRecords.length,
-  // }
-  // }
-  const res = await client.post('/modeltraining/list', body)
+  const res = await client.post('/training/list', { page, page_size: pageSize })
   return res.data
 }
 
 export async function deleteRecord(id: number) {
-  const res = await client.delete(`/modeltraining/${id}`)
+  const res = await client.delete(`/datasets/${id}`)
   return res.data
 }
 
 export async function triggerTrain(id: number, modelName?: string) {
-  // send optional modelName in body so backend can name the model/run
-  const body = {
-    id: id,
-    model_name: modelName,
-  }
-  //modelName ? { modelName } : undefined
-  const res = await client.post(`/modeltraining/train`, body)
+  const res = await client.post('/training/train', { id, model_name: modelName })
   return res.data
 }
 
-export async function getDetails(id: number) {
-  const res = await client.get(`/training/${id}`)
-  return res.data
-}
-
-export default { uploadFile, fetchHistory, deleteRecord, triggerTrain, getDetails }
+export default { uploadFile, fetchHistory, deleteRecord, triggerTrain }
