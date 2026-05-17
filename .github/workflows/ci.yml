@@ -150,7 +150,8 @@ jobs:
             } > backend/.env
 
             echo "=== Restarting services ==="
-            sudo docker compose down
+            sudo docker compose down --remove-orphans
+            sudo docker rm -f $(sudo docker ps -aq) 2>/dev/null || true
             sudo docker compose up -d --build
             sudo docker system prune -f
 
