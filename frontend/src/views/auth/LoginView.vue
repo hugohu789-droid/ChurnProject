@@ -33,6 +33,23 @@
           />
         </div>
 
+        <!-- CAPTCHA -->
+        <div class="form-group">
+          <label>Verification Code</label>
+          <CaptchaWidget @change="onCaptchaChange" />
+          <input
+            v-model="captchaInput"
+            type="text"
+            placeholder="Enter the code above"
+            autocomplete="off"
+            maxlength="5"
+            class="captcha-input"
+            :class="{ 'input-error': captchaError }"
+            @input="captchaError = ''"
+          />
+          <span v-if="captchaError" class="field-error">{{ captchaError }}</span>
+        </div>
+
         <p v-if="error" class="error-msg">{{ error }}</p>
 
         <button type="submit" class="btn-primary" :disabled="isLoading">
@@ -50,15 +67,30 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
+import CaptchaWidget from '@/components/CaptchaWidget.vue'
 
 const { login, isLoading, error } = useAuth()
 
 const form = reactive({ email: '', password: '' })
+const captchaInput = ref('')
+const captchaCode = ref('')
+const captchaError = ref('')
+
+function onCaptchaChange(code: string) {
+  captchaCode.value = code
+  captchaInput.value = ''
+  captchaError.value = ''
+}
 
 async function handleSubmit() {
+  if (captchaInput.value.toUpperCase() !== captchaCode.value) {
+    captchaError.value = 'Incorrect verification code, please try again.'
+    captchaInput.value = ''
+    return
+  }
   await login(form)
 }
 </script>
@@ -209,5 +241,21 @@ async function handleSubmit() {
 
 .auth-footer a:hover {
   text-decoration: underline;
+}
+
+.captcha-input {
+  letter-spacing: 0.15em;
+  font-family: 'Courier New', monospace;
+  text-transform: uppercase;
+}
+
+.input-error {
+  border-color: #ef4444 !important;
+}
+
+.field-error {
+  font-size: 0.75rem;
+  color: #ef4444;
+  margin-top: 2px;
 }
 </style>
