@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { useRouter, useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { storeToRefs } from 'pinia'
 
-// Import the tech theme styles
 import '../assets/tech-theme.css'
 
 const router = useRouter()
 const route = useRoute()
+const authStore = useAuthStore()
+const { user } = storeToRefs(authStore)
 
-// Menu Configuration (English)
 const menuItems = [
   { name: 'Dashboard', path: '/dashboard', icon: '📊' },
   { name: 'Model Training', path: '/training', icon: '🧠' },
@@ -15,9 +17,9 @@ const menuItems = [
   { name: 'Predictions', path: '/predict', icon: '🔮' },
 ]
 
-const navigate = (path: string) => {
-  router.push(path)
-}
+const navigate = (path: string) => router.push(path)
+
+const logout = () => authStore.logout()
 </script>
 
 <template>
@@ -55,7 +57,9 @@ const navigate = (path: string) => {
       <header class="top-header">
         <h2 class="page-title">{{ route.name || 'Dashboard' }}</h2>
         <div class="user-profile">
-          <div class="avatar">Admin</div>
+          <div class="avatar">{{ user?.username?.slice(0, 2).toUpperCase() ?? '?' }}</div>
+          <span class="username">{{ user?.username }}</span>
+          <button class="logout-btn" @click="logout" title="Sign out">⏻</button>
         </div>
       </header>
       
@@ -208,6 +212,12 @@ const navigate = (path: string) => {
   z-index: 5;
 }
 
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .user-profile .avatar {
   width: 36px;
   height: 36px;
@@ -216,8 +226,39 @@ const navigate = (path: string) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 600;
   border: 1px solid var(--color-border);
+  color: var(--color-primary);
+}
+
+.username {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logout-btn {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.logout-btn:hover {
+  border-color: #ef4444;
+  color: #ef4444;
 }
 
 .content-wrapper {
