@@ -136,18 +136,18 @@ jobs:
             chmod -R 755 frontend/dist
 
             echo "=== Writing backend .env ==="
-            cat > backend/.env <<EOF
-            APP_NAME="ML Platform"
-            SECRET_KEY=${APP_SECRET_KEY}
-            DATABASE_URL=${APP_DATABASE_URL}
-            CORS_ORIGINS=${APP_CORS_ORIGINS}
-            ACCESS_TOKEN_EXPIRE_MINUTES=30
-            REFRESH_TOKEN_EXPIRE_DAYS=7
-            UPLOAD_DIR=uploadfiles
-            MODELS_DIR=trained_models
-            PREDICT_DIR=predictfiles
-            RESULTS_DIR=predictresults
-            EOF
+            {
+              echo "APP_NAME=\"ML Platform\""
+              echo "SECRET_KEY=${APP_SECRET_KEY}"
+              [ -n "${APP_DATABASE_URL}" ] && echo "DATABASE_URL=${APP_DATABASE_URL}"
+              [ -n "${APP_CORS_ORIGINS}" ] && echo "CORS_ORIGINS=${APP_CORS_ORIGINS}"
+              echo "ACCESS_TOKEN_EXPIRE_MINUTES=30"
+              echo "REFRESH_TOKEN_EXPIRE_DAYS=7"
+              echo "UPLOAD_DIR=uploadfiles"
+              echo "MODELS_DIR=trained_models"
+              echo "PREDICT_DIR=predictfiles"
+              echo "RESULTS_DIR=predictresults"
+            } > backend/.env
 
             echo "=== Restarting services ==="
             sudo docker compose down
