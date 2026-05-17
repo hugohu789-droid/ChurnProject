@@ -1,5 +1,5 @@
-# Local development stack — starts all services with hot-reload.
-# Copy .env.example to .env and fill in values before running.
+# Production stack — frontend served by nginx, backend via FastAPI, PostgreSQL DB.
+# Copy backend/.env.example to backend/.env and fill in values before running locally.
 
 services:
   # ─── PostgreSQL ───────────────────────────────────────────────────────────
@@ -11,8 +11,6 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-mluser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mlpassword}
       POSTGRES_DB: ${POSTGRES_DB:-ml_platform}
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -20,6 +18,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - app_net
 
   # ─── Backend (FastAPI) ────────────────────────────────────────────────────
   backend:
@@ -31,10 +31,7 @@ services:
     env_file: ./backend/.env
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-mluser}:${POSTGRES_PASSWORD:-mlpassword}@db:5432/${POSTGRES_DB:-ml_platform}
-    ports:
-      - "8000:8000"
     volumes:
-      - ./backend:/app
       - ml_uploads:/app/uploadfiles
       - ml_models:/app/trained_models
     depends_on:
@@ -43,19 +40,18 @@ services:
     networks:
       - app_net
 
-  # ─── Frontend (Vite dev server) ───────────────────────────────────────────
-  frontend:
-    image: node:22-alpine
-    container_name: ml_platform_frontend
-    working_dir: /app
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    command: sh -c "npm install && npm run dev -- --host"
+  # ─── Frontend (nginx serving built dist) ─────────────────────────────────
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: ml_platform_nginx
+    restart: unless-stopped
     ports:
-      - "5173:5173"
-    environment:
-      VITE_API_BASE_URL: http://localhost:8000/api/v1
+      - "80:80"
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
     networks:
       - app_net
 

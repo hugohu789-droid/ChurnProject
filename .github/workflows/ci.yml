@@ -108,7 +108,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "frontend-dist.tar.gz,backend/**,docker-compose.yml,deploy/**"
+          source: "frontend-dist.tar.gz,backend/**,docker-compose.yml,nginx.conf"
           target: "/home/ubuntu/ml-platform"
           overwrite: true
 
