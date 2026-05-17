@@ -1,10 +1,9 @@
 import axios, { type AxiosError } from 'axios'
-import { useAuthStore } from '@/stores/auth'
 
 export const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string) || '/api/v1'
 
-const client = axios.create({
+export const client = axios.create({
   baseURL: API_BASE_URL,
   timeout: 30_000,
 })
@@ -18,7 +17,9 @@ client.interceptors.request.use((config) => {
   return config
 })
 
-// Attempt a token refresh on 401, then retry the original request once
+// On 401: try to refresh the token, then retry the original request once.
+// Importing useAuthStore here would create a circular dependency
+// (client → auth store → api/auth → client), so we clear tokens directly.
 client.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
@@ -38,7 +39,10 @@ client.interceptors.response.use(
           }
           return client(original!)
         } catch {
-          useAuthStore().logout()
+          // Refresh failed — clear session and redirect to login
+          localStorage.removeItem('access_token')
+          localStorage.removeItem('refresh_token')
+          window.location.href = '/#/login'
         }
       }
     }
