@@ -1,22 +1,32 @@
 /* Tech Theme Variables */
-:root {
-  /* Background: Deep Space Blue / Midnight Blue */
+
+/* Dark theme (default — also used by Element Plus via html.dark) */
+:root,
+html.dark {
   --bg-color: #0f172a;
-  /* Surface: Slightly lighter blue-gray for sidebar and cards */
   --color-surface: #1e293b;
-  /* Hover Surface */
   --color-surface-hover: #334155;
-  /* Border: Low contrast */
   --color-border: #334155;
-  /* Primary: Tech Blue / Cyan */
   --color-primary: #38bdf8;
-  /* Primary Glow */
   --color-primary-glow: rgba(56, 189, 248, 0.3);
-  /* Text Colors */
   --color-text-main: #f1f5f9;
   --color-text-muted: #94a3b8;
-  
-  /* Layout Dimensions */
+}
+
+/* Light theme */
+html.light {
+  --bg-color: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f1f5f9;
+  --color-border: #e2e8f0;
+  --color-primary: #0284c7;
+  --color-primary-glow: rgba(2, 132, 199, 0.2);
+  --color-text-main: #0f172a;
+  --color-text-muted: #64748b;
+}
+
+/* Layout dimensions (theme-independent) */
+:root {
   --sidebar-width: 260px;
   --header-height: 64px;
   --transition-speed: 0.3s;
@@ -29,6 +39,7 @@ body {
   background-color: var(--bg-color);
   color: var(--color-text-main);
   -webkit-font-smoothing: antialiased;
+  transition: background-color var(--transition-speed), color var(--transition-speed);
 }
 
 /* Scrollbar Styling */
@@ -53,9 +64,9 @@ body {
   border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 24px;
-  /* Soft Shadow */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   backdrop-filter: blur(10px);
+  transition: background-color var(--transition-speed), border-color var(--transition-speed);
 }
 
 /* Component: Input */
@@ -79,7 +90,7 @@ body {
 /* Component: Button */
 .tech-btn {
   background: linear-gradient(135deg, var(--color-primary) 0%, #0ea5e9 100%);
-  color: #0f172a; /* Dark text for contrast */
+  color: #ffffff;
   font-weight: 600;
   border: none;
   padding: 10px 24px;

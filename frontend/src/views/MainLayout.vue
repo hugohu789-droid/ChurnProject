@@ -2,6 +2,7 @@
 import { useRouter, useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
+import { useTheme } from '@/composables/useTheme'
 
 import '../assets/tech-theme.css'
 
@@ -9,6 +10,7 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const { user } = storeToRefs(authStore)
+const { theme, toggleTheme } = useTheme()
 
 const menuItems = [
   { name: 'Dashboard', path: '/dashboard', icon: '📊' },
@@ -26,13 +28,13 @@ const logout = () => authStore.logout()
     <!-- Left Sidebar -->
     <aside class="sidebar">
       <div class="logo-container">
-        <div class="logo-icon">C</div>
-        <span class="logo-text">Churn<span class="highlight">AI</span></span>
+        <div class="logo-icon">M</div>
+        <span class="logo-text">ML<span class="highlight">Platform</span></span>
       </div>
-      
+
       <nav class="nav-menu">
-        <div 
-          v-for="item in menuItems" 
+        <div
+          v-for="item in menuItems"
           :key="item.path"
           class="nav-item"
           :class="{ active: route.path === item.path }"
@@ -40,7 +42,6 @@ const logout = () => authStore.logout()
         >
           <span class="icon">{{ item.icon }}</span>
           <span class="label">{{ item.name }}</span>
-          <!-- Glowing bar for active state -->
           <div class="glow-bar"></div>
         </div>
       </nav>
@@ -56,15 +57,21 @@ const logout = () => authStore.logout()
       <header class="top-header">
         <h2 class="page-title">{{ route.name || 'Dashboard' }}</h2>
         <div class="user-profile">
+          <button
+            class="theme-toggle-btn"
+            @click="toggleTheme"
+            :title="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+          >
+            {{ theme === 'dark' ? '☀️' : '🌙' }}
+          </button>
           <div class="avatar">{{ user?.username?.slice(0, 2).toUpperCase() ?? '?' }}</div>
           <span class="username">{{ user?.username }}</span>
-          <button class="logout-btn" title="Sign out" @click="logout">⏻</button>
+          <button class="logout-btn" @click="logout" title="Sign out">⏻</button>
         </div>
       </header>
-      
+
       <div class="content-wrapper">
-        <!-- Page Content Slot -->
-        <slot></slot> 
+        <slot></slot>
       </div>
     </main>
   </div>
@@ -77,6 +84,7 @@ const logout = () => authStore.logout()
   width: 100vw;
   overflow: hidden;
   background-color: var(--bg-color);
+  transition: background-color var(--transition-speed);
 }
 
 /* Sidebar Styles */
@@ -87,6 +95,7 @@ const logout = () => authStore.logout()
   display: flex;
   flex-direction: column;
   z-index: 10;
+  transition: background-color var(--transition-speed), border-color var(--transition-speed);
 }
 
 .logo-container {
@@ -101,13 +110,14 @@ const logout = () => authStore.logout()
   width: 32px;
   height: 32px;
   background: var(--color-primary);
-  color: var(--bg-color);
+  color: #ffffff;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
   margin-right: 12px;
+  flex-shrink: 0;
 }
 
 .logo-text {
@@ -141,12 +151,12 @@ const logout = () => authStore.logout()
 }
 
 .nav-item:hover {
-  background-color: rgba(255, 255, 255, 0.03);
+  background-color: var(--color-surface-hover);
   color: var(--color-text-main);
 }
 
 .nav-item.active {
-  background: linear-gradient(90deg, rgba(56, 189, 248, 0.1) 0%, transparent 100%);
+  background: linear-gradient(90deg, var(--color-primary-glow) 0%, transparent 100%);
   color: var(--color-primary);
 }
 
@@ -197,6 +207,8 @@ const logout = () => authStore.logout()
   flex-direction: column;
   overflow: hidden;
   position: relative;
+  background-color: var(--bg-color);
+  transition: background-color var(--transition-speed);
 }
 
 .top-header {
@@ -206,9 +218,17 @@ const logout = () => authStore.logout()
   justify-content: space-between;
   padding: 0 32px;
   border-bottom: 1px solid var(--color-border);
-  background-color: rgba(15, 23, 42, 0.8); /* Translucent */
+  background-color: var(--color-surface);
   backdrop-filter: blur(8px);
   z-index: 5;
+  transition: background-color var(--transition-speed), border-color var(--transition-speed);
+}
+
+.page-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text-main);
 }
 
 .user-profile {
@@ -226,7 +246,7 @@ const logout = () => authStore.logout()
   align-items: center;
   justify-content: center;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
   border: 1px solid var(--color-border);
   color: var(--color-primary);
   flex-shrink: 0;
@@ -239,6 +259,27 @@ const logout = () => authStore.logout()
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.theme-toggle-btn {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, background-color 0.15s;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.theme-toggle-btn:hover {
+  border-color: var(--color-primary);
+  background-color: var(--color-surface-hover);
 }
 
 .logout-btn {
